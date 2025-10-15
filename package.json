@@ -1,0 +1,12 @@
+{
+  "name": "frog-fund",
+  "version": "0.1.0",
+  "description": "Team project for Software Cycles discipline",
+  "license": "ISC",
+  "author": "Maxim Kradozhon",
+  "type": "module",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
