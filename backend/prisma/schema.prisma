@@ -13,3 +13,86 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name         String
+  email        String         @unique
+  password     String
+  Campaign     Campaign[]
+  Donation     Donation[]
+  Notification Notification[]
+}
+
+model Campaign {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizer_id     String         @db.Uuid
+  title            String
+  description      String
+  target_amount    Int?
+  collected_amount Int
+  status           CampaignStatus
+  user             User           @relation(fields: [organizer_id], references: [id])
+  Raffle           Raffle[]
+  Donation         Donation[]
+}
+
+model Raffle {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id  String         @db.Uuid
+  description  String
+  raffle_date  DateTime
+  winner_count Int
+  raffle_type  RaffleType
+  status       RaffleStatus
+  campaign     Campaign       @relation(fields: [campaign_id], references: [id])
+  RaffleWinner RaffleWinner[]
+}
+
+model RaffleWinner {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  raffle_id String @db.Uuid
+  raffle    Raffle @relation(fields: [raffle_id], references: [id])
+}
+
+model Donation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id    String   @db.Uuid
+  donor_id       String   @db.Uuid
+  transaction_id String   @db.Uuid
+  amount         Int
+  comment        String
+  campaign       Campaign @relation(fields: [campaign_id], references: [id])
+  user           User     @relation(fields: [donor_id], references: [id])
+}
+
+model Notification {
+  id      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id String             @db.Uuid
+  message String
+  status  NotificationStatus
+  user    User               @relation(fields: [user_id], references: [id])
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVE
+}
+
+enum RaffleType {
+  ALL
+  MULTIPLE
+  TOP
+}
+
+enum RaffleStatus {
+  PENDING
+  COMPLETED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+}
