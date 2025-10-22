@@ -1,9 +1,7 @@
-export class UserService {
-  constructor() {
-    this.users = [{ name: 'RulerChen', description: 'Author of this project' }]
-  }
+import prisma from './prisma.js'
 
-  getUsers() {
-    return this.users
+export class UserService {
+  async getUsers() {
+    return await prisma.user.findMany()
   }
 }
