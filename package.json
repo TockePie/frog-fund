@@ -10,7 +10,7 @@
     "start:db": "docker-compose up -d",
     "stop:db": "docker-compose down",
     "db:push": "cd backend && npx prisma db push",
-    "postinstall": "npx prisma generate --schema=backend/prisma/schema.prisma --dotenv=backend/.env"
+    "postinstall": "cd backend && npx prisma generate"
   },
   "workspaces": [
     "backend",
