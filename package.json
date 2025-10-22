@@ -5,6 +5,13 @@
   "license": "ISC",
   "author": "Maxim Kradozhon",
   "type": "module",
+  "scripts": {
+    "dev:back": "npm run dev -w backend",
+    "start:db": "docker-compose up -d",
+    "stop:db": "docker-compose down",
+    "db:push": "cd backend && npx prisma db push",
+    "postinstall": "cd backend && npx prisma generate"
+  },
   "workspaces": [
     "backend",
     "frontend"

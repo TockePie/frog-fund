@@ -25,6 +25,7 @@ export default defineConfig([
       }
     },
     rules: {
+      'no-undef': 'error',
       'no-unused-vars': ['error', { varsIgnorePattern: '^[A-Z_]' }],
       'simple-import-sort/exports': 'error',
       'simple-import-sort/imports': [
