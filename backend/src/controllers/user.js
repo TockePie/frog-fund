@@ -1,11 +1,12 @@
-import { UserBodyObject, UserObject } from '../models/user.js'
+import { UserBodyObject, UserObject, UsersArray } from '../models/user.js'
 import { UserService } from '../services/user.js'
 
 const userService = new UserService()
 
 export async function getAllUsers(_req, res) {
   const users = await userService.getUsers()
-  res.status(200).json(users)
+  const response = UsersArray.parse(users)
+  res.status(200).json(response)
 }
 
 export async function createUser(req, res) {

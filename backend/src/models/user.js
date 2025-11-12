@@ -11,3 +11,5 @@ export const UserObject = UserBodyObject.extend({
 }).omit({
   password: true
 })
+
+export const UsersArray = z.array(UserObject)
