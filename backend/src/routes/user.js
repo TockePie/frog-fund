@@ -5,7 +5,7 @@ import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', UserController.getAllUsers)
+router.get('/', catchAsync(UserController.getAllUsers))
 router.post('/', catchAsync(UserController.createUser))
 
 export default router
