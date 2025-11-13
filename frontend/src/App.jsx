@@ -1,36 +1,22 @@
-import { Link } from 'react-router'
+// src/App.jsx
 
-export default function App() {
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import HomePage from './pages/Home/index.jsx'
+import CampaignsPage from './pages/Campaigns/index.jsx'
+// НЕ ПОТРІБНО: import RegisterPage from './pages/Register/index.jsx';
+
+const RafflesPage = () => <h2>Сторінка Розіграшів (заглушка)</h2>
+
+function App() {
   return (
-    <main className="flex flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
-
-      <div className="flex flex-col items-center gap-4">
-        <span>
-          FrogFund покликаний спростити спосіб збору коштів та створенню
-          розіграшів.
-        </span>
-
-        <div className="flex gap-4">
-          <Link to="/campaigns">
-            <button
-              className="rounded-sm bg-stone-900 px-4 py-2 text-white hover:bg-stone-800 active:bg-stone-700"
-              type="button"
-            >
-              Мої збори
-            </button>
-          </Link>
-
-          <Link to="/raffles">
-            <button
-              className="rounded-sm bg-stone-900 px-4 py-2 text-white hover:bg-stone-800 active:bg-stone-700"
-              type="button"
-            >
-              Розіграші
-            </button>
-          </Link>
-        </div>
-      </div>
-    </main>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      {/* НЕ ПОТРІБНО: <Route path="/register" element={<RegisterPage />} /> */}
+      <Route path="/campaigns" element={<CampaignsPage />} />
+      <Route path="/raffles" element={<RafflesPage />} />
+    </Routes>
   )
 }
+
+export default App
