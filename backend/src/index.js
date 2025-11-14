@@ -1,3 +1,4 @@
+// @ts-check
 import cors from 'cors'
 import dotenv from 'dotenv'
 import express from 'express'
@@ -15,6 +16,8 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
 app.use('/', routes)
+
+app.use(errorHandler)
 
 app.use(errorHandler)
 
