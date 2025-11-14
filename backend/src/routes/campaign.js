@@ -1,13 +1,14 @@
 import express from 'express'
 
-import controller from '../controllers/campaign.js'
+import * as CampaignController from '../controllers/campaign.js'
+import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', controller.getAll)
-router.get('/:id', controller.getById)
-router.post('/', controller.create)
-router.put('/:id', controller.update)
-router.delete('/:id', controller.remove)
+router.get('/', catchAsync(CampaignController.getAllCampaigns))
+router.get('/:id', catchAsync(CampaignController.getCampaignById))
+router.post('/', catchAsync(CampaignController.createCampaign))
+router.put('/:id', catchAsync(CampaignController.updateCampaign))
+router.delete('/:id', catchAsync(CampaignController.deleteCampaign))
 
 export default router

@@ -1,13 +1,13 @@
 import express from 'express'
 
-import controller from '../controllers/donation.js'
+import * as DonationController from '../controllers/donation.js'
+import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', controller.getAll)
-router.get('/:id', controller.getById)
-router.post('/', controller.create)
-router.put('/:id', controller.update)
-router.delete('/:id', controller.remove)
+router.get('/', catchAsync(DonationController.getAllDonations))
+router.get('/:id', catchAsync(DonationController.getDonationById))
+router.post('/', catchAsync(DonationController.createDonation))
+router.delete('/:id', catchAsync(DonationController.deleteDonation))
 
 export default router

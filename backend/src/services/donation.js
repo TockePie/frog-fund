@@ -1,23 +1,19 @@
-import prisma from './prisma.js'
+import prisma from '../utils/prisma.js'
 
 export class DonationService {
-  async getAll() {
+  async getDonations() {
     return await prisma.donation.findMany()
   }
 
-  async getById(id) {
+  async getDonation(id) {
     return await prisma.donation.findUnique({ where: { id } })
   }
 
-  async create(data) {
+  async createDonation(data) {
     return await prisma.donation.create({ data })
   }
 
-  async update(id, data) {
-    return await prisma.donation.update({ where: { id }, data })
-  }
-
-  async delete(id) {
+  async deleteDonation(id) {
     return await prisma.donation.delete({ where: { id } })
   }
 }

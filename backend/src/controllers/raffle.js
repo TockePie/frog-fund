@@ -1,59 +1,39 @@
+import {
+  RaffleBodyObject,
+  RaffleObject,
+  RafflesArray
+} from '../models/raffle.js'
 import { RaffleService } from '../services/raffle.js'
 
-const service = new RaffleService()
+const raffleService = new RaffleService()
 
-async function getAll(req, res) {
-  try {
-    const items = await service.getAll()
-    res.status(200).json(items)
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    res.status(500).json({ error: 'Failed to fetch users' })
-  }
+export async function getAllRaffles(_req, res) {
+  const items = await raffleService.getRaffles()
+  const response = RafflesArray.parse(items)
+  res.status(200).json(response)
 }
 
-async function getById(req, res) {
-  try {
-    const { id } = req.params
-    const item = await service.getById(id)
-    if (!item) return res.status(404).json({ error: 'User not found' })
-    res.status(200).json(item)
-  } catch (error) {
-    console.error('Error fetching user:', error)
-    res.status(500).json({ error: 'Failed to fetch user' })
+export async function getRaffleById(req, res) {
+  const { id } = req.params
+  const item = await raffleService.getRaffle(id)
+  if (!item) {
+    const err = new Error('Raffle not found')
+    err.status = 404
+    throw err
   }
+  const response = RaffleObject.parse(item)
+  res.status(200).json(response)
 }
 
-async function create(req, res) {
-  try {
-    const created = await service.create(req.body)
-    res.status(201).json(created)
-  } catch (error) {
-    console.error('Error creating user:', error)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
+export async function createRaffle(req, res) {
+  const data = RaffleBodyObject.parse(req.body)
+  const created = await raffleService.createRaffle(data)
+  const response = RaffleObject.parse(created)
+  res.status(201).json(response)
 }
 
-async function update(req, res) {
-  try {
-    const { id } = req.params
-    const updated = await service.update(id, req.body)
-    res.status(200).json(updated)
-  } catch (error) {
-    console.error('Error updating user:', error)
-    res.status(500).json({ error: 'Failed to update user' })
-  }
+export async function deleteRaffle(req, res) {
+  const { id } = req.params
+  await raffleService.deleteRaffle(id)
+  res.status(204).send()
 }
-
-async function remove(req, res) {
-  try {
-    const { id } = req.params
-    await service.delete(id)
-    res.status(204).send()
-  } catch (error) {
-    console.error('Error deleting user:', error)
-    res.status(500).json({ error: 'Failed to delete user' })
-  }
-}
-
-export default { getAll, getById, create, update, remove }

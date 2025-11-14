@@ -1,59 +1,48 @@
+import { UserBodyObject, UserObject, UsersArray } from '../models/user.js'
 import { UserService } from '../services/user.js'
 
-const service = new UserService()
+const userService = new UserService()
 
-async function getAll(req, res) {
-  try {
-    const items = await service.getAll()
-    res.status(200).json(items)
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    res.status(500).json({ error: 'Failed to fetch users' })
-  }
+export async function getAllUsers(_req, res) {
+  const users = await userService.getUsers()
+  const response = UsersArray.parse(users)
+  res.status(200).json(response)
 }
 
-async function getById(req, res) {
-  try {
-    const { id } = req.params
-    const item = await service.getById(id)
-    if (!item) return res.status(404).json({ error: 'User not found' })
-    res.status(200).json(item)
-  } catch (error) {
-    console.error('Error fetching user:', error)
-    res.status(500).json({ error: 'Failed to fetch user' })
+export async function getUserById(req, res) {
+  const { id } = req.params
+  const user = await userService.getUser(id)
+  if (!user) {
+    const err = new Error('User not found')
+    err.status = 404
+    throw err
   }
+  const response = UserObject.parse(user)
+  res.status(200).json(response)
 }
 
-async function create(req, res) {
-  try {
-    const created = await service.create(req.body)
-    res.status(201).json(created)
-  } catch (error) {
-    console.error('Error creating user:', error)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
+export async function createUser(req, res) {
+  const data = UserBodyObject.parse(req.body)
+  const created = await userService.createUser(data)
+  const response = UserObject.parse(created)
+  res.status(201).json(response)
 }
 
-async function update(req, res) {
-  try {
-    const { id } = req.params
-    const updated = await service.update(id, req.body)
-    res.status(200).json(updated)
-  } catch (error) {
-    console.error('Error updating user:', error)
-    res.status(500).json({ error: 'Failed to update user' })
+export async function updateUser(req, res) {
+  const { id } = req.params
+  const data = req.body
+  const updated = await userService.updateUser(id, data)
+  if (!updated) {
+    const err = new Error('User not found')
+    err.status = 404
+    throw err
   }
+  const response = UserObject.parse(updated)
+  res.status(200).json(response)
 }
 
-async function remove(req, res) {
-  try {
-    const { id } = req.params
-    await service.delete(id)
-    res.status(204).send()
-  } catch (error) {
-    console.error('Error deleting user:', error)
-    res.status(500).json({ error: 'Failed to delete user' })
-  }
+export async function deleteUser(req, res) {
+  const { id } = req.params
+  await userService.deleteUser(id)
+  res.status(204).send()
 }
-
-export default { getAll, getById, create, update, remove }

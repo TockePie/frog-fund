@@ -1,59 +1,39 @@
+import {
+  DonationBodyObject,
+  DonationObject,
+  DonationsArray
+} from '../models/donation.js'
 import { DonationService } from '../services/donation.js'
 
-const service = new DonationService()
+const donationService = new DonationService()
 
-async function getAll(req, res) {
-  try {
-    const items = await service.getAll()
-    res.status(200).json(items)
-  } catch (error) {
-    console.error('Error fetching users:', error)
-    res.status(500).json({ error: 'Failed to fetch users' })
-  }
+export async function getAllDonations(_req, res) {
+  const items = await donationService.getAllDonations()
+  const response = DonationsArray.parse(items)
+  res.status(200).json(response)
 }
 
-async function getById(req, res) {
-  try {
-    const { id } = req.params
-    const item = await service.getById(id)
-    if (!item) return res.status(404).json({ error: 'User not found' })
-    res.status(200).json(item)
-  } catch (error) {
-    console.error('Error fetching user:', error)
-    res.status(500).json({ error: 'Failed to fetch user' })
+export async function getDonationById(req, res) {
+  const { id } = req.params
+  const item = await donationService.getDonations(id)
+  if (!item) {
+    const err = new Error('Donation not found')
+    err.status = 404
+    throw err
   }
+  const response = DonationObject.parse(item)
+  res.status(200).json(response)
 }
 
-async function create(req, res) {
-  try {
-    const created = await service.create(req.body)
-    res.status(201).json(created)
-  } catch (error) {
-    console.error('Error creating user:', error)
-    res.status(500).json({ error: 'Failed to create user' })
-  }
+export async function createDonation(req, res) {
+  const data = DonationBodyObject.parse(req.body)
+  const created = await donationService.createDonation(data)
+  const response = DonationObject.parse(created)
+  res.status(201).json(response)
 }
 
-async function update(req, res) {
-  try {
-    const { id } = req.params
-    const updated = await service.update(id, req.body)
-    res.status(200).json(updated)
-  } catch (error) {
-    console.error('Error updating user:', error)
-    res.status(500).json({ error: 'Failed to update user' })
-  }
+export async function deleteDonation(req, res) {
+  const { id } = req.params
+  await donationService.deleteDonation(id)
+  res.status(204).send()
 }
-
-async function remove(req, res) {
-  try {
-    const { id } = req.params
-    await service.delete(id)
-    res.status(204).send()
-  } catch (error) {
-    console.error('Error deleting user:', error)
-    res.status(500).json({ error: 'Failed to delete user' })
-  }
-}
-
-export default { getAll, getById, create, update, remove }

@@ -1,13 +1,13 @@
 import express from 'express'
 
-import controller from '../controllers/raffle.js'
+import * as RaffleController from '../controllers/raffle.js'
+import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', controller.getAll)
-router.get('/:id', controller.getById)
-router.post('/', controller.create)
-router.put('/:id', controller.update)
-router.delete('/:id', controller.remove)
+router.get('/', catchAsync(RaffleController.getAllRaffles))
+router.get('/:id', catchAsync(RaffleController.getRaffleById))
+router.post('/', catchAsync(RaffleController.createRaffle))
+router.delete('/:id', catchAsync(RaffleController.deleteRaffle))
 
 export default router

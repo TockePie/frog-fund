@@ -1,23 +1,28 @@
-import prisma from './prisma.js'
+import prisma from '../utils/prisma.js'
 
 export class CampaignService {
-  async getAll() {
+  async getCampaigns() {
     return await prisma.campaign.findMany()
   }
 
-  async getById(id) {
+  async getCampaign(id) {
     return await prisma.campaign.findUnique({ where: { id } })
   }
 
-  async create(data) {
+  async createCampaigns(data) {
     return await prisma.campaign.create({ data })
   }
 
-  async update(id, data) {
-    return await prisma.campaign.update({ where: { id }, data })
+  async updateCampaigns(id, data) {
+    return await prisma.campaign
+      .update({
+        where: { id },
+        data
+      })
+      .catch(() => null)
   }
 
-  async delete(id) {
+  async deleteCampaigns(id) {
     return await prisma.campaign.delete({ where: { id } })
   }
 }

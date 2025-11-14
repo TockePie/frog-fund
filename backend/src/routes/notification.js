@@ -1,13 +1,11 @@
 import express from 'express'
 
-import controller from '../controllers/notification.js'
+import * as NotificationController from '../controllers/notification.js'
+import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', controller.getAll)
-router.get('/:id', controller.getById)
-router.post('/', controller.create)
-router.put('/:id', controller.update)
-router.delete('/:id', controller.remove)
+router.get('/', catchAsync(NotificationController.getAllNotifications))
+router.post('/', catchAsync(NotificationController.createNotification))
 
 export default router

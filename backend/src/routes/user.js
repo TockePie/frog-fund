@@ -1,13 +1,14 @@
 import express from 'express'
 
-import controller from '../controllers/user.js'
+import * as UserController from '../controllers/user.js'
+import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', controller.getAll)
-router.get('/:id', controller.getById)
-router.post('/', controller.create)
-router.put('/:id', controller.update)
-router.delete('/:id', controller.remove)
+router.get('/', catchAsync(UserController.getAllUsers))
+router.get('/:id', catchAsync(UserController.getUserById))
+router.post('/', catchAsync(UserController.createUser))
+router.put('/:id', catchAsync(UserController.updateUser))
+router.delete('/:id', catchAsync(UserController.deleteUser))
 
 export default router

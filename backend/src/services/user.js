@@ -1,23 +1,28 @@
-import prisma from './prisma.js'
+import prisma from '../utils/prisma.js'
 
 export class UserService {
-  async getAll() {
+  async getUsers() {
     return await prisma.user.findMany()
   }
 
-  async getById(id) {
+  async getUser(id) {
     return await prisma.user.findUnique({ where: { id } })
   }
 
-  async create(data) {
+  async createUser(data) {
     return await prisma.user.create({ data })
   }
 
-  async update(id, data) {
-    return await prisma.user.update({ where: { id }, data })
+  async updateUser(id, data) {
+    return await prisma.user
+      .update({
+        where: { id },
+        data
+      })
+      .catch(() => null)
   }
 
-  async delete(id) {
+  async deleteUser(id) {
     return await prisma.user.delete({ where: { id } })
   }
 }

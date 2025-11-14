@@ -1,23 +1,19 @@
-import prisma from './prisma.js'
+import prisma from '../utils/prisma.js'
 
 export class RaffleWinnerService {
-  async getAll() {
+  async getRaffleWinners() {
     return await prisma.raffleWinner.findMany()
   }
 
-  async getById(id) {
+  async getRaffleWinner(id) {
     return await prisma.raffleWinner.findUnique({ where: { id } })
   }
 
-  async create(data) {
+  async createRaffleWinner(data) {
     return await prisma.raffleWinner.create({ data })
   }
 
-  async update(id, data) {
-    return await prisma.raffleWinner.update({ where: { id }, data })
-  }
-
-  async delete(id) {
+  async deleteRaffleWinner(id) {
     return await prisma.raffleWinner.delete({ where: { id } })
   }
 }
