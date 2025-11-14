@@ -2,7 +2,7 @@ services:
   db:
     image: postgres:latest
     container_name: frog-fund
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_PASSWORD: admin123
     ports:
