@@ -2,8 +2,8 @@ import {
   RaffleWinnerBodyObject,
   RaffleWinnerObject,
   RaffleWinnersArray
-} from '../models/raffle-winner.js'
-import { RaffleWinnerService } from '../services/raffle-winner.js'
+} from '../models/raffleWinner.js'
+import { RaffleWinnerService } from '../services/raffleWinner.js'
 
 const raffleWinnerService = new RaffleWinnerService()
 

@@ -1,6 +1,6 @@
 import express from 'express'
 
-import * as RaffleWinnerController from '../controllers/raffle-winner.js'
+import * as RaffleWinnerController from '../controllers/raffleWinner.js'
 import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
