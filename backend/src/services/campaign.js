@@ -9,11 +9,11 @@ export class CampaignService {
     return await prisma.campaign.findUnique({ where: { id } })
   }
 
-  async createCampaigns(data) {
+  async createCampaign(data) {
     return await prisma.campaign.create({ data })
   }
 
-  async updateCampaigns(id, data) {
+  async updateCampaign(id, data) {
     return await prisma.campaign
       .update({
         where: { id },
@@ -22,7 +22,7 @@ export class CampaignService {
       .catch(() => null)
   }
 
-  async deleteCampaigns(id) {
+  async deleteCampaign(id) {
     return await prisma.campaign.delete({ where: { id } })
   }
 }

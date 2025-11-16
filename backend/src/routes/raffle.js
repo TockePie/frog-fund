@@ -8,6 +8,7 @@ const router = express.Router()
 router.get('/', catchAsync(RaffleController.getAllRaffles))
 router.get('/:id', catchAsync(RaffleController.getRaffleById))
 router.post('/', catchAsync(RaffleController.createRaffle))
+router.post('/run/:id', catchAsync(RaffleController.runRaffle))
 router.delete('/:id', catchAsync(RaffleController.deleteRaffle))
 
 export default router

@@ -15,13 +15,14 @@ datasource db {
 }
 
 model User {
-  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name         String
-  email        String         @unique
-  password     String
-  Campaign     Campaign[]
-  Donation     Donation[]
-  Notification Notification[]
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String         @unique
+  password      String
+  Campaign      Campaign[]
+  Donation      Donation[]
+  Notification  Notification[]
+  raffleWinners RaffleWinner[]
 }
 
 model Campaign {
@@ -53,6 +54,8 @@ model RaffleWinner {
   id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   raffle_id String @db.Uuid
   raffle    Raffle @relation(fields: [raffle_id], references: [id])
+  user_id   String @db.Uuid
+  user      User   @relation(fields: [user_id], references: [id])
 }
 
 model Donation {

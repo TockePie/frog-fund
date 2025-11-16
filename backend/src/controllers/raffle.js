@@ -3,7 +3,9 @@ import {
   RaffleObject,
   RafflesArray
 } from '../models/raffle.js'
-import { RaffleService } from '../services/raffle.js'
+
+import { RaffleService } from '../services/raffle.js';
+import raffleRunService from '../services/raffleRunService.js';
 
 const raffleService = new RaffleService()
 
@@ -36,4 +38,13 @@ export async function deleteRaffle(req, res) {
   const { id } = req.params
   await raffleService.deleteRaffle(id)
   res.status(204).send()
+}
+
+export async function runRaffle(req, res) {
+  const { id } = req.params
+  const winners = await raffleRunService.runRaffle(id)
+  res.status(200).json({
+    message: "Raffle completed",
+    winners
+  })
 }
