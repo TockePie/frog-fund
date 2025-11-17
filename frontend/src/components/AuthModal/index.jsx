@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import frogMascot from '../../res/frog.png';
 
 const AuthModal = ({ isOpen, onClose }) => {

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import frogMascot from '../../res/frog.png';
 import AuthModal from '../../components/AuthModal/index.jsx';
+import frogMascot from '../../res/frog.png';
 
 const HomePage = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
