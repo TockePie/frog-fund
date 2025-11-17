@@ -13,4 +13,5 @@ export const CampaignObject = CampaignBodyObject.extend({
   status: z.enum(['DRAFT', 'ACTIVE', 'CLOSED', 'ARCHIVE'])
 })
 
+export const CampaignUpdateObject = CampaignBodyObject.partial()
 export const CampaignsArray = z.array(CampaignObject)

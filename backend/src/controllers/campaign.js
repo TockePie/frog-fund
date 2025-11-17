@@ -1,26 +1,27 @@
 import {
   CampaignBodyObject,
   CampaignObject,
-  CampaignsArray
+  CampaignsArray,
+  CampaignUpdateObject
 } from '../models/campaign.js'
 import { CampaignService } from '../services/campaign.js'
+import { HttpError } from '../utils/http-error.js'
 
 const campaignService = new CampaignService()
 
 export async function getAllCampaigns(_req, res) {
   const items = await campaignService.getCampaigns()
   const response = CampaignsArray.parse(items)
+  if (response.length === 0) throw new HttpError('Campaigns not found', 404)
+
   res.status(200).json(response)
 }
 
 export async function getCampaignById(req, res) {
   const { id } = req.params
   const item = await campaignService.getCampaign(id)
-  if (!item) {
-    const err = new Error('Campaign not found')
-    err.status = 404
-    throw err
-  }
+  if (!item) throw new HttpError('Campaign not found', 404)
+
   const response = CampaignObject.parse(item)
   res.status(200).json(response)
 }
@@ -34,13 +35,10 @@ export async function createCampaign(req, res) {
 
 export async function updateCampaign(req, res) {
   const { id } = req.params
-  const data = req.body
+  const data = CampaignUpdateObject.parse(req.body)
   const updated = await campaignService.updateCampaign(id, data)
-  if (!updated) {
-    const err = new Error('Campaign not found')
-    err.status = 404
-    throw err
-  }
+  if (!updated) throw new HttpError('Campaign not found', 404)
+
   const response = CampaignObject.parse(updated)
   res.status(200).json(response)
 }

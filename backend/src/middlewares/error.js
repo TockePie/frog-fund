@@ -11,7 +11,13 @@ export default function errorHandler(err, req, res, next) {
     })
   }
 
-  res.status(err.status || 500).json({
-    error: err.message || 'Internal Server Error'
+  if (err.name === 'HttpError') {
+    return res.status(err.statusCode).json({
+      error: err.message
+    })
+  }
+
+  res.status(500).json({
+    error: 'Internal Server Error'
   })
 }
