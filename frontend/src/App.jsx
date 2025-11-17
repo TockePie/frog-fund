@@ -2,9 +2,20 @@ import { useState } from 'react'
 import { Link } from 'react-router'
 
 import AuthModal from './components/AuthModal'
-import frogMascot from './res/frog.png'
 
-function App() {
+import frogMascot from '/frog.png'
+
+function PageButton({ link, title, className }) {
+  return (
+    <Link to={link} className={className}>
+      <button className="w-full rounded-2xl bg-[#f7b267] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-lg transition hover:scale-110 hover:bg-[#f59e50]">
+        {title}
+      </button>
+    </Link>
+  )
+}
+
+export default function App() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
@@ -29,16 +40,16 @@ function App() {
 
             {/* Кнопки */}
             <div className="mt-10 flex flex-col justify-center gap-8 sm:flex-row">
-              <Link to="/campaigns" className="flex-1">
-                <button className="w-full rounded-2xl bg-[#f7b267] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-lg transition hover:scale-110 hover:bg-[#f59e50]">
-                  Організація збору
-                </button>
-              </Link>
-              <Link to="/raffles" className="flex-1">
-                <button className="w-full rounded-2xl bg-[#f7b267] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-lg transition hover:scale-110 hover:bg-[#f59e50]">
-                  Участь в розіграші
-                </button>
-              </Link>
+              <PageButton
+                link="/campaigns"
+                className="flex-1"
+                title="Організація збору"
+              />
+              <PageButton
+                link="/raffles"
+                className="flex-1"
+                title="Участь в розіграші"
+              />
             </div>
           </div>
 
@@ -73,5 +84,3 @@ function App() {
     </>
   )
 }
-
-export default App

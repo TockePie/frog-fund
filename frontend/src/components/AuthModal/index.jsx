@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import frogMascot from '../../res/frog.png'
+import frogMascot from '/frog.png'
 
 const AuthModal = ({ isOpen, onClose }) => {
   const [view, setView] = useState('login')
