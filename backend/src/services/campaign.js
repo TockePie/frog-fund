@@ -1,19 +1,19 @@
 import prisma from '../utils/prisma.js'
 
 export class CampaignService {
-  async getCampaigns() {
+  static async getCampaigns() {
     return await prisma.campaign.findMany()
   }
 
-  async getCampaign(id) {
+  static async getCampaign(id) {
     return await prisma.campaign.findUnique({ where: { id } })
   }
 
-  async createCampaign(data) {
+  static async createCampaign(data) {
     return await prisma.campaign.create({ data })
   }
 
-  async updateCampaign(id, data) {
+  static async updateCampaign(id, data) {
     return await prisma.campaign
       .update({
         where: { id },
@@ -22,7 +22,7 @@ export class CampaignService {
       .catch(() => null)
   }
 
-  async deleteCampaign(id) {
+  static async deleteCampaign(id) {
     return await prisma.campaign.delete({ where: { id } })
   }
 }

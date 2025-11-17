@@ -1,11 +1,11 @@
 import express from 'express'
 
+import AuthRoutes from './auth.js'
 import CampaignRoutes from './campaign.js'
 import DonationRoutes from './donation.js'
 import NotificationRoutes from './notification.js'
 import RaffleRoutes from './raffle.js'
 import UserRoutes from './user.js'
-import AuthRoutes from './auth.js'
 
 const router = express.Router()
 

@@ -1,11 +1,11 @@
 import prisma from '../utils/prisma.js'
 
 export class NotificationService {
-  async getNotifications() {
+  static async getNotifications() {
     return await prisma.notification.findMany()
   }
 
-  async createNotification(data) {
+  static async createNotification(data) {
     return await prisma.notification.create({ data })
   }
 }

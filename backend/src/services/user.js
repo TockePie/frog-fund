@@ -15,9 +15,9 @@ export class UserService {
 
   static async updateUserData(id, data) {
     return await prisma.user.update({
-        where: { id },
-        data
-      })
+      where: { id },
+      data
+    })
   }
 
   static async deleteUser(id) {
