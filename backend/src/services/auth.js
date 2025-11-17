@@ -2,20 +2,18 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 
 import { HttpError } from '../utils/http-error.js'
-import prisma from './prisma.js'
+import { UserService } from './user.js'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key'
 
 export class AuthService {
-  async signUp({ name, email, password }) {
+  static async signUp({ name, email, password }) {
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword
-      }
+    const user = await UserService.createUser({
+      name,
+      email,
+      password: hashedPassword
     })
 
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
@@ -25,12 +23,8 @@ export class AuthService {
     return { token }
   }
 
-  async logIn({ email, password }) {
-    const user = await prisma.user.findUnique({
-      where: {
-        email
-      }
-    })
+  static async logIn({ email, password }) {
+    const user = await UserService.getUserByEmail(email)
     if (!user) throw new HttpError('User not found', 404)
 
     const valid = await bcrypt.compare(password, user.password)
