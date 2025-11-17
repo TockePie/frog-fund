@@ -1,23 +1,24 @@
-import React, { useState, useEffect } from 'react';
-import frogMascot from '../../res/frog.png';
+import { useEffect, useState } from 'react'
+
+import frogMascot from '../../res/frog.png'
 
 const AuthModal = ({ isOpen, onClose }) => {
-  const [view, setView] = useState('login'); 
+  const [view, setView] = useState('login')
 
   useEffect(() => {
     if (isOpen) {
-      setView('login');
+      setView('login')
     }
-  }, [isOpen]);
+  }, [isOpen])
 
   if (!isOpen) {
-    return null;
+    return null
   }
 
   const handleClose = () => {
-    onClose();
-    setTimeout(() => setView('login'), 300);
-  };
+    onClose()
+    setTimeout(() => setView('login'), 300)
+  }
 
   const LoginView = () => (
     <>
@@ -53,13 +54,13 @@ const AuthModal = ({ isOpen, onClose }) => {
       </form>
       <button
         type="button"
-        onClick={() => setView('register')} 
+        onClick={() => setView('register')}
         className="w-full text-center font-semibold text-gray-600 hover:underline"
       >
         Зареєструватися
       </button>
     </>
-  );
+  )
 
   const RegisterView = () => (
     <>
@@ -89,35 +90,34 @@ const AuthModal = ({ isOpen, onClose }) => {
         </div>
         <button
           type="submit"
-          className="mb-4 w-full rounded-lg bg-[#f9a870] p-3 text-lg font-bold text-gray-800 shadow hover:bg-opacity-90"
+          className="hover:bg-opacity-90 mb-4 w-full rounded-lg bg-[#f9a870] p-3 text-lg font-bold text-gray-800 shadow"
         >
           Реєстрація
         </button>
       </form>
       <button
         type="button"
-        onClick={() => setView('login')} 
+        onClick={() => setView('login')}
         className="w-full text-center font-semibold text-gray-600 hover:underline"
       >
         Вже маєте акаунт? Увійти
       </button>
     </>
-  );
+  )
 
   return (
     <div
       onClick={handleClose}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+      className="bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`relative w-full max-w-md rounded-xl p-8 shadow-xl 
-          ${view === 'login' ? 'bg-white' : 'bg-gray-200'}`}
+        className={`relative w-full max-w-md rounded-xl p-8 shadow-xl ${view === 'login' ? 'bg-white' : 'bg-gray-200'}`}
       >
         {view === 'login' ? <LoginView /> : <RegisterView />}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default AuthModal;
+export default AuthModal
