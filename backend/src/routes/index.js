@@ -1,17 +1,19 @@
 import express from 'express'
 
-import campaignRoutes from './campaign.js'
-import donationRoutes from './donation.js'
-import notificationRoutes from './notification.js'
-import raffleRoutes from './raffle.js'
-import userRoutes from './user.js'
+import CampaignRoutes from './campaign.js'
+import DonationRoutes from './donation.js'
+import NotificationRoutes from './notification.js'
+import RaffleRoutes from './raffle.js'
+import UserRoutes from './user.js'
+import AuthRoutes from './auth.js'
 
 const router = express.Router()
 
-router.use('/users', userRoutes)
-router.use('/campaigns', campaignRoutes)
-router.use('/donations', donationRoutes)
-router.use('/raffles', raffleRoutes)
-router.use('/notifications', notificationRoutes)
+router.use('/users', UserRoutes)
+router.use('/campaigns', CampaignRoutes)
+router.use('/donations', DonationRoutes)
+router.use('/raffles', RaffleRoutes)
+router.use('/notifications', NotificationRoutes)
+router.use('/auth', AuthRoutes)
 
 export default router

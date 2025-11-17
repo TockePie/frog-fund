@@ -12,4 +12,5 @@ export const UserObject = UserBodyObject.extend({
   password: true
 })
 
+export const UserUpdateObject = UserObject.partial()
 export const UsersArray = z.array(UserObject)
