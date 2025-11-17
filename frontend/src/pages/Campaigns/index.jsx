@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import avatarImage from '../../res/golub.webp';
 
 const filters = [
@@ -56,6 +57,7 @@ const campaigns = [
 ];
 
 const CampaignsPage = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState("all");
 
   const filteredCampaigns = campaigns.filter((c) => {
@@ -77,11 +79,18 @@ const CampaignsPage = () => {
             />
             <div>
               <h2 className="text-2xl font-bold">Денис Голуб</h2>
-              <p className="text-gray-500">Баланс: <strong>5 000₴</strong></p>
+              <p className="text-gray-500">
+                Баланс: <strong>5 000₴</strong>
+              </p>
             </div>
           </div>
 
-          <button className="bg-black text-white px-6 py-3 rounded-full text-lg font-semibold hover:opacity-80 transition">
+          {/* Кнопка створення нової банки */}
+          <button
+            onClick={() => navigate('/new-bank')}
+            className="bg-black text-white px-6 py-3 rounded-full text-lg font-semibold 
+                       hover:opacity-90 hover:scale-105 transition-all duration-200"
+          >
             + Нова банка
           </button>
         </div>
@@ -100,11 +109,11 @@ const CampaignsPage = () => {
             <button
               key={f.value}
               onClick={() => setActiveFilter(f.value)}
-              className={`px-4 py-2 rounded-full text-sm font-medium border transition ${
-                activeFilter === f.value
-                  ? "bg-black text-white border-black"
+              className={`px-4 py-2 rounded-full text-sm font-medium border transition-all duration-200 active:scale-95
+                ${activeFilter === f.value
+                  ? "bg-black text-white border-black shadow-md"
                   : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
-              }`}
+                }`}
             >
               {f.label}
             </button>
@@ -116,20 +125,24 @@ const CampaignsPage = () => {
           {filteredCampaigns.map((c, i) => (
             <div
               key={i}
-              className={`border p-4 rounded-2xl shadow-sm hover:shadow-md transition ${c.color}`}
+              className={`border p-4 rounded-2xl shadow-sm transition-all duration-300 
+                         hover:shadow-xl hover:-translate-y-1 cursor-pointer ${c.color}`}
             >
               <div className="flex justify-between items-center mb-2">
                 <h3 className="text-lg font-bold">{c.title}</h3>
-                <span className="text-lg">{c.icon}</span>
+
+                <span className="text-lg transition-transform duration-200 hover:scale-125">
+                  {c.icon}
+                </span>
               </div>
 
               <p className="text-sm text-gray-500 mb-3">
                 {c.amount}₴ / {c.goal}₴
               </p>
 
-              <div className="w-full h-2 bg-gray-200 rounded-full mb-3">
+              <div className="w-full h-2 bg-gray-200 rounded-full mb-3 overflow-hidden">
                 <div
-                  className="h-full bg-green-400 rounded-full"
+                  className="h-full bg-green-400 rounded-full transition-all duration-700"
                   style={{ width: `${(c.amount / c.goal) * 100}%` }}
                 />
               </div>
