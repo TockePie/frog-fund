@@ -1,4 +1,10 @@
 // src/App.jsx
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+
+import HomePage from './pages/Home'
+import CampaignsPage from './pages/Campaigns'
+import CreateBank from './pages/CreateBank' 
 
 const RafflesPage = () => <h2>Сторінка Розіграшів (заглушка)</h2>
 
