@@ -6,7 +6,7 @@ export async function logIn(req, res) {
   res.status(200).json(result)
 }
 
-export async function singUp(req, res) {
+export async function signUp(req, res) {
   const body = UserBodyObject.parse(req.body)
   const result = await AuthService.signUp(body)
   res.status(201).json(result)

@@ -6,7 +6,12 @@ import { catchAsync } from '../utils/catch-async.js'
 
 const router = express.Router()
 
-router.get('/', catchAsync(NotificationController.getAllNotifications))
+router.get(
+  '/',
+  authMiddleware,
+  catchAsync(NotificationController.getAllNotifications)
+)
+
 router.post(
   '/',
   authMiddleware,

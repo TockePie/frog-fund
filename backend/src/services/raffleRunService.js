@@ -46,7 +46,7 @@ class RaffleRunService {
       data: { status: 'COMPLETED' }
     })
 
-    return winners
+    return winners.map((w) => ({ user: w.user, amount: w.amount }))
   }
 
   // Однаковий шанс для всіх

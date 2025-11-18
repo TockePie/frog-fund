@@ -23,24 +23,46 @@ export async function getRaffleById(req, res) {
   res.status(200).json(response)
 }
 
-//XXX: Who is the creator of the raffle? Implement validation of user_id from request headers
 export async function createRaffle(req, res) {
   const data = RaffleBodyObject.parse(req.body)
-  const created = await RaffleService.createRaffle(data)
+  if (!req.user || !req.user.id) throw new HttpError('Unauthorized', 401)
+  const payload = {
+    description: data.description,
+    raffle_date: data.raffle_date,
+    winner_count: data.winner_count,
+    raffle_type: data.raffle_type,
+    status: 'PENDING',
+    creator: {
+      connect: { id: req.user.id }
+    },
+    campaign: {
+      connect: { id: data.campaign_id }
+    }
+  }
+  const created = await RaffleService.createRaffle(payload)
   const response = RaffleObject.parse(created)
   res.status(201).json(response)
 }
 
-//XXX: User can delete someone's else data with their token. Implement validation of user_id from request headers
 export async function deleteRaffle(req, res) {
   const { id } = req.params
+  const existing = await RaffleService.getRaffle(id)
+  if (!existing) throw new HttpError('Raffle not found', 404)
+  if (!req.user || req.user.id !== existing.creator_id) {
+    throw new HttpError('Forbidden', 403)
+  }
+
   await RaffleService.deleteRaffle(id)
   res.status(204).send()
 }
 
-//XXX: User can run someone's else raffle with their token. Implement validation of user_id from request headers
 export async function runRaffle(req, res) {
   const { id } = req.params
+  const existing = await RaffleService.getRaffle(id)
+  if (!existing) throw new HttpError('Raffle not found', 404)
+  if (!req.user || req.user.id !== existing.creator_id) {
+    throw new HttpError('Forbidden', 403)
+  }
   const winners = await raffleRunService.runRaffle(id)
   res.status(200).json({
     message: 'Raffle completed',

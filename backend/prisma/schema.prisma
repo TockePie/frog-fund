@@ -23,6 +23,7 @@ model User {
   Donation      Donation[]
   Notification  Notification[]
   raffleWinners RaffleWinner[]
+  raffles       Raffle[]
 }
 
 model Campaign {
@@ -31,23 +32,24 @@ model Campaign {
   title            String
   description      String
   target_amount    Int?
-  collected_amount Int
-  status           CampaignStatus
+  collected_amount Int            @default(0)
+  status           CampaignStatus @default(DRAFT)
   user             User           @relation(fields: [organizer_id], references: [id])
   Donation         Donation[]
   Raffle           Raffle[]
 }
 
-//XXX: Who is the creator of the raffle?
 model Raffle {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   campaign_id  String         @db.Uuid
+  creator_id   String         @db.Uuid
   description  String
   raffle_date  DateTime
   winner_count Int
   raffle_type  RaffleType
   status       RaffleStatus
   campaign     Campaign       @relation(fields: [campaign_id], references: [id])
+  creator      User           @relation(fields: [creator_id], references: [id])
   RaffleWinner RaffleWinner[]
 }
 

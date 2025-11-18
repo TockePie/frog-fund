@@ -1,3 +1,5 @@
+import bcrypt from 'bcryptjs'
+
 import {
   UserBodyObject,
   UserObject,
@@ -24,18 +26,21 @@ export async function getUserById(req, res) {
   res.status(200).json(response)
 }
 
-//XXX: User can't create an account without authorization. FIX!
 export async function createUser(req, res) {
   const data = UserBodyObject.parse(req.body)
-  const created = await UserService.createUser(data)
+  const hashed = await bcrypt.hash(data.password, 10)
+  const created = await UserService.createUser({
+    ...data,
+    password: hashed
+  })
   const response = UserObject.parse(created)
   res.status(201).json(response)
 }
 
-//XXX: User can update someone's else data with their token. Implement validation of user_id from request headers
 export async function updateUsersData(req, res) {
   const { id } = req.params
   const data = UserUpdateObject.parse(req.body)
+  if (!req.user || req.user.id !== id) throw new HttpError('Forbidden', 403)
   const updated = await UserService.updateUserData(id, data)
   if (!updated) throw new HttpError('User not found', 404)
 
@@ -43,9 +48,10 @@ export async function updateUsersData(req, res) {
   res.status(200).json(response)
 }
 
-//XXX: User can delete someone's else data with their token. Implement validation of user_id from request headers
 export async function deleteUser(req, res) {
   const { id } = req.params
+  if (!req.user || req.user.id !== id) throw new HttpError('Forbidden', 403)
+
   await UserService.deleteUser(id)
   res.status(204).send()
 }
