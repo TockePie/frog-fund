@@ -1,0 +1,84 @@
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import AuthModal from '../../components/AuthModal/index.jsx';
+import frogMascot from '../../res/frog.png';
+
+const HomePage = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  return (
+    <>
+     
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] p-6">
+        
+        <div className="flex w-full max-w-6xl flex-wrap rounded-3xl bg-white p-10 shadow-2xl md:p-12 min-h-[600px] transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,0,0,0.15)]">
+          
+          {/* Ліва частина */}
+          <div className="flex flex-[1.6] flex-col justify-between rounded-2xl bg-gradient-to-br from-[#ffc1ad] to-[#ffe7c8] p-10 text-center shadow-inner">
+            <div>
+              <h2 className="mb-6 text-5xl font-extrabold text-[#2b2b2b] drop-shadow-sm">
+                Привіт!
+              </h2>
+              <p className="mb-8 text-lg font-medium leading-relaxed text-[#3d3d3d]">
+                Користуючись цим сервісом, ви можете організувати збір коштів 
+                або взяти участь у розіграшах, щоб мати шанс отримати 
+                неймовірні призи.
+              </p>
+              <h3 className="text-3xl font-semibold text-[#2b2b2b] mb-4">
+                Що тебе цікавить?
+              </h3>
+            </div>
+
+            {/* Кнопки */}
+            <div className="mt-10 flex flex-col justify-center gap-8 sm:flex-row">
+              <Link to="/campaigns" className="flex-1">
+                <button className="w-full rounded-2xl bg-[#f7b267] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-lg transition hover:scale-110 hover:bg-[#f59e50]">
+                  Організація збору
+                </button>
+              </Link>
+              <Link to="/raffles" className="flex-1">
+                <button className="w-full rounded-2xl bg-[#f7b267] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-lg transition hover:scale-110 hover:bg-[#f59e50]">
+                  Участь в розіграші
+                </button>
+              </Link>
+            </div>
+          </div>
+
+          {/* Права частина */}
+          <div className="relative flex flex-1 flex-col items-center justify-center md:pl-8">
+           
+            <div className="absolute top-10 left-1/2 -translate-x-1/2">
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="rounded-2xl bg-[#f7a072] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-md transition hover:scale-105 hover:bg-[#f68a58]"
+              >
+                Профіль
+              </button>
+            </div>
+
+            {/*жабка + назва */}
+            <div className="flex flex-col items-center justify-center mt-28">
+              <img
+                src={frogMascot}
+                alt="FrogFund Mascot"
+                className="my-8 w-64 max-w-full drop-shadow-lg transition-transform hover:scale-110"
+              />
+              <h2 className="text-6xl font-extrabold text-gray-800 tracking-tight drop-shadow-sm">
+                FrogFund
+              </h2>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/*вікно авторизації */}
+      <AuthModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
+    </>
+  );
+};
+
+export default HomePage;

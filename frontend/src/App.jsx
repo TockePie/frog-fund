@@ -1,36 +1,24 @@
-import { Link } from 'react-router'
+// src/App.jsx
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
 
-export default function App() {
+import HomePage from './pages/Home'
+import CampaignsPage from './pages/Campaigns'
+import CreateBank from './pages/CreateBank' 
+
+const RafflesPage = () => <h2>Сторінка Розіграшів (заглушка)</h2>
+
+function App() {
   return (
-    <main className="flex flex-col items-center justify-center gap-4">
-      <h1 className="text-3xl font-bold underline">Hello world!</h1>
+    <Routes>
+      <Route path="/" element={<HomePage />} />
+      <Route path="/campaigns" element={<CampaignsPage />} />
+      <Route path="/raffles" element={<RafflesPage />} />
 
-      <div className="flex flex-col items-center gap-4">
-        <span>
-          FrogFund покликаний спростити спосіб збору коштів та створенню
-          розіграшів.
-        </span>
-
-        <div className="flex gap-4">
-          <Link to="/campaigns">
-            <button
-              className="rounded-sm bg-stone-900 px-4 py-2 text-white hover:bg-stone-800 active:bg-stone-700"
-              type="button"
-            >
-              Мої збори
-            </button>
-          </Link>
-
-          <Link to="/raffles">
-            <button
-              className="rounded-sm bg-stone-900 px-4 py-2 text-white hover:bg-stone-800 active:bg-stone-700"
-              type="button"
-            >
-              Розіграші
-            </button>
-          </Link>
-        </div>
-      </div>
-    </main>
+      {/* Сторінка створення нової банки */}
+      <Route path="/new-bank" element={<CreateBank />} />
+    </Routes>
   )
 }
+
+export default App
