@@ -5,8 +5,16 @@ export class UserService {
     return await prisma.user.findMany()
   }
 
-  static async getUser(id) {
+  static async getUserById(id) {
     return await prisma.user.findUnique({ where: { id } })
+  }
+
+  static async getUserByEmail(email) {
+    return await prisma.user.findUnique({
+      where: {
+        email
+      }
+    })
   }
 
   static async createUser(data) {

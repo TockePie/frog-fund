@@ -38,6 +38,7 @@ model Campaign {
   Raffle           Raffle[]
 }
 
+//XXX: Who is the creator of the raffle?
 model Raffle {
   id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   campaign_id  String         @db.Uuid

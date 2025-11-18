@@ -23,6 +23,7 @@ export async function getRaffleById(req, res) {
   res.status(200).json(response)
 }
 
+//XXX: Who is the creator of the raffle? Implement validation of user_id from request headers
 export async function createRaffle(req, res) {
   const data = RaffleBodyObject.parse(req.body)
   const created = await RaffleService.createRaffle(data)
@@ -30,12 +31,14 @@ export async function createRaffle(req, res) {
   res.status(201).json(response)
 }
 
+//XXX: User can delete someone's else data with their token. Implement validation of user_id from request headers
 export async function deleteRaffle(req, res) {
   const { id } = req.params
   await RaffleService.deleteRaffle(id)
   res.status(204).send()
 }
 
+//XXX: User can run someone's else raffle with their token. Implement validation of user_id from request headers
 export async function runRaffle(req, res) {
   const { id } = req.params
   const winners = await raffleRunService.runRaffle(id)

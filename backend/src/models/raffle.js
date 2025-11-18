@@ -8,6 +8,7 @@ export const RaffleBodyObject = z.object({
   raffle_type: z.enum(['ALL', 'MULTIPLE', 'TOP'])
 })
 
+//XXX: Who is the creator of the raffle?
 export const RaffleObject = RaffleBodyObject.extend({
   id: z.uuidv4(),
   status: z.enum(['PENDING', 'COMPLETED'])
