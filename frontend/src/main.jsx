@@ -3,6 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes } from 'react-router'
 
+import CreateBank from './pages/Campaign/NewCampaign/index.jsx'
 import Campaigns from './pages/Campaigns/index.jsx'
 import RafflesPage from './pages/Raffles/index.js'
 import App from './App.jsx'
@@ -16,6 +17,10 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route index element={<App />} />
         <Route path="campaigns" element={<Campaigns />} />
+        <Route path="campaign">
+          {/* TODO: Implement index route */}
+          <Route path="new" element={<CreateBank />} />
+        </Route>
         <Route path="raffles" element={<RafflesPage />} />
       </Routes>
     </BrowserRouter>
