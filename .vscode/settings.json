@@ -13,9 +13,7 @@
       "name": "frontend"
     }
   ],
-  "settings": {
-    "editor.codeActionsOnSave": {
-      "source.fixAll.eslint": "always"
-    }
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
   }
 }
