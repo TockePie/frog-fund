@@ -5,6 +5,13 @@ export class DonationService {
     return await prisma.donation.findMany({ include: { user: true } })
   }
 
+  static async getDonationsByCampaign(id) {
+    return await prisma.donation.findMany({
+      where: { id },
+      include: { user: true }
+    })
+  }
+
   static async getDonation(id) {
     return await prisma.donation.findUnique({
       where: { id },

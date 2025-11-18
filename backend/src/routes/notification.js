@@ -12,10 +12,4 @@ router.get(
   catchAsync(NotificationController.getAllNotifications)
 )
 
-router.post(
-  '/',
-  authMiddleware,
-  catchAsync(NotificationController.createNotification)
-)
-
 export default router

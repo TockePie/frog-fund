@@ -4,7 +4,7 @@ import {
   RafflesArray
 } from '../models/raffle.js'
 import { RaffleService } from '../services/raffle.js'
-import raffleRunService from '../services/raffleRunService.js'
+import { RaffleRunService } from '../services/raffleRunService.js'
 import { HttpError } from '../utils/http-error.js'
 
 export async function getAllRaffles(_req, res) {
@@ -63,7 +63,7 @@ export async function runRaffle(req, res) {
   if (!req.user || req.user.id !== existing.creator_id) {
     throw new HttpError('Forbidden', 403)
   }
-  const winners = await raffleRunService.runRaffle(id)
+  const winners = await RaffleRunService.runRaffle(id)
   res.status(200).json({
     message: 'Raffle completed',
     winners

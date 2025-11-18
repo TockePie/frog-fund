@@ -1,27 +1,31 @@
+import { HttpError } from '../utils/http-error.js'
 import prisma from '../utils/prisma.js'
+import { DonationService } from './donation.js'
+import { NotificationService } from './notification.js'
+import { RaffleService } from './raffle.js'
 
-class RaffleRunService {
-  async runRaffle(raffleId) {
-    const raffle = await prisma.raffle.findUnique({
-      where: { id: raffleId }
-    })
-
-    if (!raffle) throw new Error('Raffle not found')
+export class RaffleRunService {
+  static async runRaffle(raffleId) {
+    const raffle = await RaffleService.getRaffle(raffleId)
+    if (!raffle) throw new HttpError('Raffle not found', 404)
     const { raffle_type, campaign_id, winner_count } = raffle
-    const donations = await prisma.donation.findMany({
-      where: { campaign_id },
-      include: { user: true }
-    })
 
-    if (donations.length === 0) throw new Error('No donations to this campaign')
+    const donations = await DonationService.getDonationsByCampaign(campaign_id)
+    if (donations.length === 0) {
+      throw new HttpError('No donations to this campaign', 404)
+    }
+
     let winners = []
-
-    if (raffle_type === 'ALL') {
-      winners = this.pickAll(donations, winner_count)
-    } else if (raffle_type === 'MULTIPLE') {
-      winners = this.pickMultiple(donations, winner_count)
-    } else if (raffle_type === 'TOP') {
-      winners = this.pickTop(donations, winner_count)
+    switch (raffle_type) {
+      case 'ALL': {
+        winners = this.pickAll(donations, winner_count)
+      }
+      case 'MULTIPLE': {
+        winners = this.pickMultiple(donations, winner_count)
+      }
+      case 'TOP': {
+        winners = this.pickTop(donations, winner_count)
+      }
     }
 
     await prisma.raffleWinner.createMany({
@@ -32,30 +36,23 @@ class RaffleRunService {
     })
 
     for (const win of winners) {
-      await prisma.notification.create({
-        data: {
-          user_id: win.user.id,
-          message: `Ви перемогли!`,
-          status: 'PENDING'
-        }
+      await NotificationService.createNotification({
+        user_id: win.user.id,
+        message: `Ви перемогли!`,
+        status: 'PENDING'
       })
     }
 
-    await prisma.raffle.update({
-      where: { id: raffleId },
-      data: { status: 'COMPLETED' }
-    })
+    await RaffleService.updateRaffle(raffleId, { status: 'COMPLETED' })
 
     return winners.map((w) => ({ user: w.user, amount: w.amount }))
   }
 
-  // Однаковий шанс для всіх
   pickAll(donations, count) {
     const shuffled = [...donations].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
   }
 
-  // Шанс скейлиться з величиною донату
   pickMultiple(donations, count) {
     const pool = []
 
@@ -76,10 +73,7 @@ class RaffleRunService {
     return selected
   }
 
-  // Топ донати
   pickTop(donations, count) {
     return donations.sort((a, b) => b.amount - a.amount).slice(0, count)
   }
 }
-
-export default new RaffleRunService()

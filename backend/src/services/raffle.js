@@ -13,6 +13,13 @@ export class RaffleService {
     return await prisma.raffle.create({ data })
   }
 
+  static async updateRaffle(id, data) {
+    return await prisma.raffle.update({
+      where: { id: id },
+      data
+    })
+  }
+
   static async deleteRaffle(id) {
     return await prisma.raffle.delete({ where: { id } })
   }
