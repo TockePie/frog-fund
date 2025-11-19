@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation, useNavigate } from 'react-router'
 
 import AuthModal from './components/AuthModal'
 
@@ -16,6 +16,10 @@ function PageButton({ link, title, className }) {
 }
 
 export default function App() {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  //TODO: Remove when implement modals ny routes
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
@@ -56,8 +60,11 @@ export default function App() {
           {/* Права частина */}
           <div className="relative flex flex-1 flex-col items-center justify-center md:pl-8">
             <div className="absolute top-10 left-1/2 -translate-x-1/2">
+              {/* TODO: додати перевірку на наявність JWT токена в кукі. Якщо немає, відкрити це вікно */}
               <button
-                onClick={() => setIsModalOpen(true)}
+                onClick={() =>
+                  navigate('/login', { state: { background: location } })
+                }
                 className="rounded-2xl bg-[#f7a072] px-12 py-6 text-2xl font-extrabold text-gray-800 shadow-md transition hover:scale-105 hover:bg-[#f68a58]"
               >
                 Профіль
