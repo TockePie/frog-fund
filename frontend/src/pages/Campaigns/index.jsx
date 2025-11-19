@@ -35,7 +35,7 @@ const campaigns = [
   },
   {
     id: 3,
-    title: "На пшеницю",
+    title: "На подорож",
     amount: 15.74,
     goal: 50,
     user: "Василь К.",
@@ -46,8 +46,8 @@ const campaigns = [
   },
   {
     id: 4,
-    title: "На психолога",
-    amount: 15.74,
+    title: "На поїсти",
+    amount: 50,
     goal: 50,
     user: "Ви",
     from: "Завершений",
