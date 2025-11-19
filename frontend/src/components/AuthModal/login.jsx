@@ -1,17 +1,35 @@
+import { useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
+import Cookies from 'js-cookie'
+import z from 'zod'
 
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogTitle,
   DialogTrigger
 } from '@/components/ui/dialog'
+import { logIn } from '@/lib/api/auth'
 import InputElement from '@/pages/Campaign/NewCampaign/input-element'
 
+const loginSchema = z.object({
+  email: z.email('Неправильна пошта'),
+  password: z.string().min(8, 'Пароль має бути щонайменше 8 символів')
+})
+
 export default function LoginModal({ triggerComp }) {
-  const { control, handleSubmit, reset } = useForm()
+  const closeRef = useRef(null)
+  const { data, isPending, isSuccess, mutate, error } = useMutation({
+    mutationFn: logIn
+  })
+  const { control, handleSubmit, reset } = useForm({
+    resolver: zodResolver(loginSchema)
+  })
   const navigate = useNavigate()
 
   const handleClose = () => {
@@ -19,7 +37,18 @@ export default function LoginModal({ triggerComp }) {
     reset()
   }
 
-  const onSubmit = () => {}
+  const onSubmit = (data) => {
+    mutate(data)
+  }
+
+  useEffect(() => {
+    if (isSuccess) {
+      Cookies.set('jwt', data.data.token, { expires: 7 })
+
+      const timer = setTimeout(() => closeRef.current?.click(), 2000)
+      return () => clearTimeout(timer)
+    }
+  }, [isSuccess, data])
 
   return (
     <Dialog
@@ -45,24 +74,42 @@ export default function LoginModal({ triggerComp }) {
                 name="email"
                 control={control}
                 placeholder="Пошта"
+                rules={{ required: "Це поле є обов'язковим" }}
               />
               <InputElement
                 name="password"
+                type="password"
                 control={control}
                 placeholder="Пароль"
+                rules={{ required: "Це поле є обов'язковим" }}
               />
             </div>
 
-            <Button type="submit" className="h-14">
-              Увійти
+            {error && <span className="text-red-600">{error.message}</span>}
+
+            <Button
+              type="submit"
+              className="h-14"
+              disabled={isPending || isSuccess}
+            >
+              {isSuccess ? 'Успішно!' : 'Увійти'}
             </Button>
           </form>
 
-          <Button variant="ghost" className="font-semibold">
+          <Button
+            variant="ghost"
+            className="font-semibold"
+            disabled={isPending || isSuccess}
+            onClick={() =>
+              alert('Поки що не працює. Необхідно додати компонент')
+            }
+          >
             Зареєструватися
           </Button>
         </div>
       </DialogContent>
+
+      <DialogClose ref={closeRef} className="hidden" />
     </Dialog>
   )
 }
