@@ -2,6 +2,7 @@ import { Route, Routes, useLocation } from 'react-router'
 
 import LoginModal from './components/AuthModal/login'
 import CreateBank from './pages/Campaign/NewCampaign'
+import OpenCampaign from './pages/Campaign/OpenCampaign'
 import Campaigns from './pages/Campaigns'
 import RafflesPage from './pages/Raffles'
 import App from './App'
@@ -16,8 +17,8 @@ export default function AppRoutes() {
         <Route index element={<App />} />
         <Route path="campaigns" element={<Campaigns />} />
         <Route path="campaign">
-          {/* TODO: Implement index route */}
           <Route path="new" element={<CreateBank />} />
+          <Route path=":id" element={<OpenCampaign />} />
         </Route>
         <Route path="raffles" element={<RafflesPage />} />
       </Routes>

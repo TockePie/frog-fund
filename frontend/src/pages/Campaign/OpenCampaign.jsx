@@ -1,3 +1,5 @@
+// XXX: It's better to name this file index.jsx
+
 // XXX: ESLint - 'React' is declared but its value is never read.
 import React, { useState } from 'react'
 //XXX: Use 'react-router' instead
@@ -42,6 +44,7 @@ const campaigns = [
   }
 ]
 
+//XXX: Website DOESN'T follow out Figma design. REDESIGN!!!!
 export default function OpenCampaign() {
   const { id } = useParams()
   const navigate = useNavigate()

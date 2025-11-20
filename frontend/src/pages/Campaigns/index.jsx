@@ -63,6 +63,8 @@ const campaigns = [
 
 const CampaignsPage = () => {
   const navigate = useNavigate()
+  //TODO: Use search params instead
+  // https://reactrouter.com/api/hooks/useSearchParams
   const [activeFilter, setActiveFilter] = useState('all')
 
   const filteredCampaigns = campaigns.filter((c) => {
@@ -70,10 +72,10 @@ const CampaignsPage = () => {
     return c.type === activeFilter
   })
 
+  //XXX: Remove max-w-6xl and redesign an app to Figma's board
   return (
     <div className="flex min-h-screen justify-center bg-[#f9f9f9] p-6">
       <div className="w-full max-w-6xl rounded-3xl bg-white p-10 shadow-lg">
-        {/* Профіль */}
         <div className="mb-10 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <img
@@ -83,13 +85,14 @@ const CampaignsPage = () => {
             />
             <div>
               <h2 className="text-2xl font-bold">Денис Голуб</h2>
+              {/* XXX: Accent color of our app is stone, not gray */}
               <p className="text-gray-500">
                 Баланс: <strong>5 000₴</strong>
               </p>
             </div>
           </div>
 
-          {/* Кнопка створення нової банки */}
+          {/* XXX: Accent color of our app is stone, not black */}
           <button
             onClick={() => navigate('/campaign/new')}
             className="rounded-full bg-black px-6 py-3 text-lg font-semibold text-white transition-all duration-200 hover:scale-105 hover:opacity-90"
@@ -98,15 +101,15 @@ const CampaignsPage = () => {
           </button>
         </div>
 
-        {/* Заголовок */}
         <div className="mb-6 flex items-center gap-3">
           <h2 className="text-3xl font-bold">Усі збори</h2>
+          {/* XXX: Accent color of our app is stone, not gray */}
           <span className="text-xl text-gray-500">
             {filteredCampaigns.length}
           </span>
         </div>
 
-        {/* Фільтри */}
+        {/* XXX: Accent color of our app is stone, not gray */}
         <div className="mb-10 flex gap-3">
           {filters.map((f) => (
             <button
@@ -123,7 +126,6 @@ const CampaignsPage = () => {
           ))}
         </div>
 
-        {/* Картки зборів */}
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {filteredCampaigns.map((c) => (
             <div
@@ -139,10 +141,12 @@ const CampaignsPage = () => {
                 </span>
               </div>
 
+              {/* XXX: Accent color of our app is stone, not gray */}
               <p className="mb-3 text-sm text-gray-500">
                 {c.amount}₴ / {c.goal}₴
               </p>
 
+              {/* XXX: Accent color of our app is stone, not gray */}
               <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-gray-200">
                 <div
                   className="h-full rounded-full bg-green-400 transition-all duration-700"
@@ -150,6 +154,7 @@ const CampaignsPage = () => {
                 />
               </div>
 
+              {/* XXX: Accent color of our app is stone, not gray */}
               <div className="flex justify-between text-sm text-gray-600">
                 <span>{c.user}</span>
                 <span>{c.from}</span>
