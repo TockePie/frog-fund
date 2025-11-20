@@ -19,14 +19,20 @@ export default function App() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  //TODO: Remove when implement modals ny routes
+  //TODO: Remove when implement modals by routes
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
     <>
+      {/* XXX: Try to omit hex-color classes. Use Tailwind color classes insted
+          https://ui.shadcn.com/colors
+
+          You can use this tool to convert colors easily
+          https://tailwind-color.vercel.app/
+    
+    */}
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] p-6">
         <div className="flex min-h-[600px] w-full max-w-6xl flex-wrap rounded-3xl bg-white p-10 shadow-2xl transition-all duration-300 hover:shadow-[0_0_40px_rgba(0,0,0,0.15)] md:p-12">
-          {/* Ліва частина */}
           <div className="flex flex-[1.6] flex-col justify-between rounded-2xl bg-gradient-to-br from-[#ffc1ad] to-[#ffe7c8] p-10 text-center shadow-inner">
             <div>
               <h2 className="mb-6 text-5xl font-extrabold text-[#2b2b2b] drop-shadow-sm">
@@ -42,7 +48,6 @@ export default function App() {
               </h3>
             </div>
 
-            {/* Кнопки */}
             <div className="mt-10 flex flex-col justify-center gap-8 sm:flex-row">
               <PageButton
                 link="/campaigns"
@@ -57,7 +62,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Права частина */}
           <div className="relative flex flex-1 flex-col items-center justify-center md:pl-8">
             <div className="absolute top-10 left-1/2 -translate-x-1/2">
               {/* TODO: додати перевірку на наявність JWT токена в кукі. Якщо немає, відкрити це вікно */}
@@ -71,7 +75,6 @@ export default function App() {
               </button>
             </div>
 
-            {/*жабка + назва */}
             <div className="mt-28 flex flex-col items-center justify-center">
               <img
                 src={frogMascot}
@@ -86,7 +89,7 @@ export default function App() {
         </div>
       </div>
 
-      {/*вікно авторизації */}
+      {/* TODO: Implement register component based on login.jsx. */}
       <AuthModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </>
   )

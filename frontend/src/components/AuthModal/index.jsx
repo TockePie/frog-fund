@@ -1,3 +1,5 @@
+// TODO: Make register component based on login.jsx. Remove this file after
+
 import { useEffect, useState } from 'react'
 
 import frogMascot from '/frog.png'
