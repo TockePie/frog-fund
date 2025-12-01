@@ -1,4 +1,8 @@
-import { Link, useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { useNavigate } from "react-router-dom"
+import Cookies from "js-cookie"
+
+import LoginModal from "@/components/AuthModal/login"
 
 import frog from "/frog.png"
 import golub from "/golub.webp"
@@ -6,7 +10,11 @@ import golub from "/golub.webp"
 export default function RafflesPage() {
   const navigate = useNavigate()
 
+  const [authOpen, setAuthOpen] = useState(false)
+  const [redirectId, setRedirectId] = useState(null)
+
   const raffles = [
+    // 🔥 Розіграші з профілю
     {
       id: 1,
       title: "На пшеницю",
@@ -14,62 +22,123 @@ export default function RafflesPage() {
       img: golub,
       current: 15.74,
       target: 50,
-      min: 0.1,
-      type: "множинний",
+      min: 5,
+      type: "одиночний",
       winners: 1,
     },
     {
       id: 2,
-      title: "На корм",
+      title: "На психолога",
       owner: "Василь К.",
       img: frog,
-      current: 76.76,
-      target: 100,
-      min: 5,
+      current: 15.74,
+      target: 50,
+      min: 10,
       type: "множинний",
-      winners: 5,
+      winners: 3,
     },
     {
       id: 3,
-      title: "На психолога",
-      owner: "Артем Д.",
+      title: "На подорож",
+      owner: "Василь К.",
       img: frog,
-      current: 10.6,
-      target: 200,
-      min: 10,
+      current: 15.74,
+      target: 50,
+      min: 5,
+      type: "одиночний",
+      winners: 1,
+    },
+    {
+      id: 4,
+      title: "На поїсти",
+      owner: "Денис Г.",
+      img: golub,
+      current: 50,
+      target: 50,
+      min: 0,
+      type: "закритий",
+      winners: 0,
+    },
+
+    // 🔥 Нові незалежні розіграші
+    {
+      id: 5,
+      title: "На лікування котика",
+      owner: "Марія К.",
+      img: frog,
+      current: 220,
+      target: 500,
+      min: 20,
       type: "множинний",
-      winners: 5,
+      winners: 3,
+    },
+    {
+      id: 6,
+      title: "На подорож до Львова",
+      owner: "Ігор С.",
+      img: golub,
+      current: 150,
+      target: 300,
+      min: 15,
+      type: "одиночний",
+      winners: 1,
     },
   ]
 
+  // клік по розіграшу
+  const handleOpenRaffle = (id) => {
+    const token = Cookies.get("jwt")
+
+    if (!token) {
+      setRedirectId(id)
+      setAuthOpen(true)
+      return
+    }
+
+    navigate(`/raffles/${id}`)
+  }
+
+  // коли модалка закрилась — якщо токен зʼявився, переходимо
+  const handleAuthChange = (isOpen) => {
+    setAuthOpen(isOpen)
+
+    if (!isOpen) {
+      const token = Cookies.get("jwt")
+      if (token && redirectId) {
+        navigate(`/raffles/${redirectId}`)
+      }
+    }
+  }
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] py-10 px-6 flex justify-center">
-      <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl p-10 relative">
+    <>
+      {/* Модалка логіну (без тригера, керується станом) */}
+      <LoginModal open={authOpen} onOpenChange={handleAuthChange} />
 
-        {/* 🔥 Кнопка НАЗАД (Варіант 2) */}
-        <button
-          onClick={() => navigate(-1)}
-          className="absolute top-6 left-6 flex items-center gap-2 text-xl font-bold text-gray-800
-                     drop-shadow-[0_0_12px_rgba(0,0,0,0.45)] hover:opacity-90 transition"
-        >
-          ← Назад
-        </button>
+      <div className="min-h-screen w-full bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] py-10 px-6 flex justify-center">
+        <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl p-10 relative">
 
-        <h1 className="text-5xl font-extrabold text-[#2b2b2b] mb-10 text-center">
-          Доступні розіграші:
-        </h1>
+          {/* Кнопка НАЗАД  */}
+          <button
+            onClick={() => navigate(-1)}
+            className="absolute top-6 left-6 flex items-center gap-2 text-xl font-bold text-gray-800
+                       drop-shadow-[0_0_12px_rgba(0,0,0,0.45)] hover:opacity-90 transition"
+          >
+            ← Назад
+          </button>
 
-        <div className="flex flex-col gap-8">
+          <h1 className="text-5xl font-extrabold text-[#2b2b2b] mb-10 text-center">
+            Доступні розіграші:
+          </h1>
 
-          {raffles.map((r) => (
-            <Link
-              to={`/raffles/${r.id}`}
-              key={r.id}
-              className="block"
-            >
-              <div className="flex flex-col md:flex-row bg-gradient-to-r from-[#ffe6e1] to-[#fff5d7]
-                rounded-2xl p-6 shadow-lg hover:scale-[1.02] hover:shadow-xl transition cursor-pointer">
-
+          <div className="flex flex-col gap-8">
+            {raffles.map((r) => (
+              <div
+                key={r.id}
+                onClick={() => handleOpenRaffle(r.id)}
+                className="block cursor-pointer flex flex-col md:flex-row bg-gradient-to-r from-[#ffe6e1] to-[#fff5d7]
+                           rounded-2xl p-6 shadow-lg hover:scale-[1.02] hover:shadow-xl transition"
+              >
                 {/* Ліва частина */}
                 <div className="flex flex-1 gap-4 items-center">
                   <img
@@ -111,14 +180,12 @@ export default function RafflesPage() {
                     <span className="font-bold">{r.winners}</span>
                   </p>
                 </div>
-
               </div>
-            </Link>
-          ))}
+            ))}
+          </div>
 
         </div>
-
       </div>
-    </div>
+    </>
   )
 }

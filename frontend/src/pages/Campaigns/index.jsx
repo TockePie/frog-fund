@@ -20,44 +20,52 @@ const campaigns = [
     title: 'На пшеницю',
     amount: 15.74,
     goal: 50,
-    user: 'Василь К.',
+    user: 'Денис Г',
+    ownerId: 1,
     from: 'від 5₴',
-    type: 'supported',
-    color: 'border-red-300',
-    icon: '🎈'
+    type: 'my',
+    raffleDone: false,  // 🔥 Розіграш НЕ проведено
+    color: 'border-green-300',
+    icon: ''
   },
   {
     id: 2,
-    title: 'На психолога',
-    amount: 15.74,
-    goal: 50,
-    user: 'Ви',
+    title: 'На корм',
+    amount: 76.76,
+    goal: 100,
+    user: 'Василь К.',
+    ownerId: 22,
     from: 'від 10₴',
-    type: 'my',
-    color: 'border-green-300',
-    icon: '🎈'
+    type: 'supported',
+    raffleDone: false,
+    color: 'border-red-300',
+    icon: ''
   },
   {
     id: 3,
-    title: 'На подорож',
-    amount: 15.74,
-    goal: 50,
-    user: 'Василь К.',
+    title: 'На психолога',
+    amount: 10.6,
+    goal: 200,
+    user: 'Василь Д.',
+    ownerId: 17,
     from: 'від 5₴',
     type: 'supported',
+    raffleDone: false,
     color: 'border-yellow-300',
-    icon: '🎈'
+    icon: ''
   },
   {
     id: 4,
     title: 'На поїсти',
     amount: 50,
     goal: 50,
-    user: 'Ви',
+    user: 'Денис Г',
+    ownerId: 1,
     from: 'Завершений',
     type: 'closed',
+    raffleDone: true,   
     color: 'border-gray-300',
-    icon: ''
+    icon: ''        
   }
 ]
 
