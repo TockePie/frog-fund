@@ -13,32 +13,40 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { logIn } from "@/lib/api/auth"
+import { signUp } from "@/lib/api/auth"
 import InputElement from "@/pages/Campaign/NewCampaign/input-element"
 
-import RegisterModal from "./register"
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "Введіть ім’я"),
+    email: z.email("Неправильна пошта"),
+    password: z.string().min(8, "Пароль має мінімум 8 символів"),
+    confirmPassword: z.string().min(8, "Підтвердження обов’язкове"),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Паролі не співпадають",
+    path: ["confirmPassword"],
+  })
 
-const loginSchema = z.object({
-  email: z.email("Неправильна пошта"),
-  password: z.string().min(8, "Пароль має мінімум 8 символів"),
-})
-
-export default function LoginModal({ triggerComp }) {
+export default function RegisterModal({ triggerComp }) {
   const closeRef = useRef(null)
 
   const { control, handleSubmit, reset } = useForm({
-    resolver: zodResolver(loginSchema),
+    resolver: zodResolver(registerSchema),
   })
 
   const { mutate, data, isSuccess, error, isPending } = useMutation({
-    mutationFn: logIn,
+    mutationFn: signUp,
   })
 
   const onSubmit = (form) => {
-    mutate(form)
+    mutate({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+    })
   }
 
-  // Закриття після успішного логіну
   useEffect(() => {
     if (isSuccess) {
       Cookies.set("jwt", data.data.token, { expires: 7 })
@@ -56,13 +64,13 @@ export default function LoginModal({ triggerComp }) {
       <DialogTrigger asChild>{triggerComp}</DialogTrigger>
 
       <DialogContent className="flex w-full max-w-lg flex-col items-center gap-10 rounded-3xl bg-stone-100 p-10 text-center shadow-xl">
-
-        <DialogTitle className="text-3xl font-bold">Увійти</DialogTitle>
+        <DialogTitle className="text-3xl font-bold">Реєстрація</DialogTitle>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="flex w-full max-w-96 flex-col gap-8"
         >
+          <InputElement name="name" placeholder="Ваше ім’я" control={control} />
           <InputElement name="email" placeholder="Пошта" control={control} />
           <InputElement
             name="password"
@@ -70,28 +78,22 @@ export default function LoginModal({ triggerComp }) {
             placeholder="Пароль"
             control={control}
           />
+          <InputElement
+            name="confirmPassword"
+            type="password"
+            placeholder="Підтвердження пароля"
+            control={control}
+          />
 
           {error && <p className="text-red-600">{error.message}</p>}
 
           <Button disabled={isPending || isSuccess} className="h-14">
-            {isSuccess ? "Успішно!" : "Увійти"}
+            {isSuccess ? "Успішно!" : "Зареєструватися"}
           </Button>
         </form>
-
-        {/* Кнопка відкриває RegisterModal */}
-        <RegisterModal
-          triggerComp={
-            <Button variant="ghost" className="font-semibold">
-              Зареєструватися
-            </Button>
-          }
-        />
-
       </DialogContent>
 
-      {/* приховане авто-закриття */}
       <DialogClose ref={closeRef} className="hidden" />
     </Dialog>
   )
 }
-

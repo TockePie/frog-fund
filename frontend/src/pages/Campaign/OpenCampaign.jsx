@@ -15,22 +15,22 @@ const campaigns = [
     title: 'На пшеницю',
     amount: 15.74,
     goal: 50,
-    user: 'Василь К.',
+    user: ' Денис Г',
     from: 'від 5₴'
   },
   {
-    id: 2,
+    id: 3,
     title: 'На психолога',
-    amount: 15.74,
-    goal: 50,
-    user: 'Хтось ',
+    amount: 10.6,
+    goal: 200,
+    user: 'Артем Д ',
     from: 'від 10₴'
   },
   {
-    id: 3,
-    title: 'На подорож',
-    amount: 15.74,
-    goal: 50,
+    id: 2,
+    title: 'На корм',
+    amount: 76.76,
+    goal: 100,
     user: 'Василь К.',
     from: 'від 5₴'
   },

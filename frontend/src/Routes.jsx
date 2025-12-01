@@ -21,6 +21,7 @@ export default function AppRoutes() {
           <Route path=":id" element={<OpenCampaign />} />
         </Route>
         <Route path="raffles" element={<RafflesPage />} />
+        <Route path="raffles/:id" element={<OpenCampaign />} />
       </Routes>
 
       {background && (
