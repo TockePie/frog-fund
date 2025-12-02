@@ -1,36 +1,73 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
+import { getAllCampaigns } from "@/lib/api/campaign";
 import { getMe } from "@/lib/api/user";
 
 export default function CampaignsPage() {
   const navigate = useNavigate();
+  const [filter, setFilter] = useState("all");
 
-  // Запит: поточний користувач + його банки
-  const { data, isLoading, error } = useQuery({
+  // Поточний користувач
+  const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: getMe,
   });
 
-  if (isLoading)
+  // Всі збори
+  const campaignsQuery = useQuery({
+    queryKey: ["campaigns"],
+    queryFn: getAllCampaigns,
+  });
+
+  if (meQuery.isLoading || campaignsQuery.isLoading)
     return <p className="p-10 text-center">Завантаження...</p>;
 
-  if (error)
-    return (
-      <p className="p-10 text-center text-red-600">
-        Помилка: {error.message}
-      </p>
-    );
+  if (meQuery.error || campaignsQuery.error)
+    return <p className="p-10 text-center text-red-600">Помилка завантаження</p>;
 
-  const user = data.data;
-  const campaigns = user.Campaign || [];
+  const me = meQuery.data.data;
+  const campaigns = campaignsQuery.data.data;
+
+  // ===== ФІЛЬТРАЦІЯ =====
+let list = campaigns.filter((c) => {
+  const isMine = c.organizer_id === me.id;
+  const iDonated = c.Donation?.some((d) => d.donor_id === me.id);
+  const iWon = c.Raffle?.some((r) =>
+    r.RaffleWinner?.some((w) => w.user_id === me.id)
+  );
+
+  return isMine || iDonated || iWon;
+});
+
+  if (filter === "mine") {
+    list = campaigns.filter((c) => c.organizer_id === me.id);
+  }
+
+  if (filter === "supported") {
+    list = campaigns.filter((c) =>
+      c.Donation?.some((d) => d.donor_id === me.id)
+    );
+  }
+
+  if (filter === "closed") {
+    list = campaigns.filter((c) => c.status === "CLOSED");
+  }
+
+  // ===== СОРТУВАННЯ: активні зверху =====
+  list = [...list].sort((a, b) => {
+    const aClosed = a.status === "CLOSED";
+    const bClosed = b.status === "CLOSED";
+    return aClosed - bClosed; // активні → закриті
+  });
 
   return (
     <div className="flex min-h-screen justify-center bg-[#f9f9f9] p-6">
       <div className="w-full max-w-6xl rounded-3xl bg-white p-10 shadow-lg">
 
         {/* ПРОФІЛЬ */}
-        <div className="mb-10 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <img
               src="/golub.webp"
@@ -38,14 +75,13 @@ export default function CampaignsPage() {
               className="h-16 w-16 rounded-full object-cover"
             />
             <div>
-              <h2 className="text-2xl font-bold">{user.name}</h2>
+              <h2 className="text-2xl font-bold">{me.name}</h2>
               <p className="text-gray-500">
-                Баланс: <strong>{user.balance ?? 0}₴</strong>
+                Баланс: <strong>{me.balance ?? 0}₴</strong>
               </p>
             </div>
           </div>
 
-          {/* НОВА БАНКА */}
           <button
             onClick={() => navigate("/campaign/new")}
             className="rounded-full bg-black px-6 py-3 text-lg font-semibold text-white"
@@ -54,26 +90,63 @@ export default function CampaignsPage() {
           </button>
         </div>
 
-        {/* ЗБОРИ */}
-        <h2 className="mb-6 text-3xl font-bold">Мої банки</h2>
+        {/* Вкладки */}
+        <h2 className="mb-4 text-3xl font-bold">Усі збори</h2>
+        <div className="mb-8 flex flex-wrap gap-3">
+          <button
+            onClick={() => setFilter("all")}
+            className={`px-4 py-2 rounded-full ${
+              filter === "all" ? "bg-black text-white" : "bg-gray-200"
+            }`}
+          >
+            Усі
+          </button>
 
-        {campaigns.length === 0 && (
-          <p className="text-gray-500 text-lg">У вас ще немає жодної банки.</p>
-        )}
+          <button
+            onClick={() => setFilter("mine")}
+            className={`px-4 py-2 rounded-full ${
+              filter === "mine" ? "bg-black text-white" : "bg-gray-200"
+            }`}
+          >
+            Мої збори
+          </button>
 
+          <button
+            onClick={() => setFilter("supported")}
+            className={`px-4 py-2 rounded-full ${
+              filter === "supported" ? "bg-black text-white" : "bg-gray-200"
+            }`}
+          >
+            Підтримані збори
+          </button>
+
+          <button
+            onClick={() => setFilter("closed")}
+            className={`px-4 py-2 rounded-full ${
+              filter === "closed" ? "bg-black text-white" : "bg-gray-200"
+            }`}
+          >
+            Мої закриті збори
+          </button>
+        </div>
+
+        {/* СПИСОК БАНОК */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {list.map((c) => {
+            const progress =
+              ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
 
-          {campaigns.map((c) => {
-            const isClosed =
-              (c.collected_amount ?? 0) >= (c.target_amount ?? Infinity);
+            const isClosed = c.status === "CLOSED";
+            const myBank = c.organizer_id === me.id;
 
             return (
               <div
                 key={c.id}
                 onClick={() => navigate(`/campaign/${c.id}`)}
-                className="cursor-pointer rounded-2xl border p-5 hover:shadow-xl transition bg-white"
+                className={`cursor-pointer rounded-2xl border p-5 hover:shadow-xl transition relative bg-white`}
               >
-                <h3 className="text-lg font-bold mb-2">{c.title}</h3>
+                {/* Назва */}
+                <h3 className="text-lg font-bold mb-1">{c.title}</h3>
 
                 {/* Прогрес */}
                 <p className="text-sm text-gray-600">
@@ -82,30 +155,27 @@ export default function CampaignsPage() {
 
                 <div className="my-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-green-500"
-                    style={{
-                      width: `${((c.collected_amount ?? 0) /
-                        (c.target_amount || 1)) * 100}%`,
-                    }}
-                  ></div>
+                    className={`h-full ${
+                      isClosed ? "bg-green-500" : "bg-orange-400"
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
 
-                <p className="text-sm text-gray-500">
-                  Мін. внесок: {c.min_amount ?? "0"}₴
+                {/* Автор / мінімалка */}
+                <p className="text-sm text-gray-500 mt-2">
+                  {myBank ? "Ви" : c.user?.name}  
                 </p>
 
-                {/* Статус */}
-                <p
-                  className={`mt-3 text-sm font-semibold ${
-                    isClosed ? "text-red-600" : "text-green-600"
-                  }`}
-                >
-                  {isClosed ? "Збір завершено" : "Активний збір"}
-                </p>
+                {/* Статус завершено */}
+                {isClosed && (
+                  <p className="absolute right-4 bottom-4 text-sm font-semibold text-gray-600">
+                    Завершений
+                  </p>
+                )}
               </div>
             );
           })}
-
         </div>
       </div>
     </div>
