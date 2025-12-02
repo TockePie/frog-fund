@@ -8,7 +8,7 @@ export function logIn({ email, password }) {
 
 // ⭐ ДОДАЄМО signUp — ПРАЦЮЄ З API
 export function signUp({ name, email, password }) {
-  return apiInstance.post("/auth/register", {
+  return apiInstance.post("/auth/signup", {
     name,
     email,
     password,

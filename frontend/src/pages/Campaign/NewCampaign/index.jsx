@@ -1,23 +1,35 @@
-import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router'
-import { ChevronLeft } from 'lucide-react'
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
+import { useMutation } from "@tanstack/react-query";
+import { ChevronLeft } from "lucide-react";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
+import { createCampaign } from "@/lib/api/campaign";
 
-import InputElement from './input-element'
-import TextareaElement from './textarea-element'
+import InputElement from "./input-element";
+import TextareaElement from "./textarea-element";
 
 export default function CreateBank() {
-  const { control, handleSubmit } = useForm()
-  const navigate = useNavigate()
+  const { control, handleSubmit } = useForm();
+  const navigate = useNavigate();
 
-  const onSubmit = (data, e) => {
-    e.preventDefault()
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: createCampaign,
+    onSuccess: () => {
+      navigate("/campaigns"); // після успішного створення
+    },
+  });
 
-    console.log(data)
+  const onSubmit = (data) => {
+    const prepared = {
+      title: data.title,
+      description: data.description || "",
+      target_amount: Number(data.target_amount) || 0,
+      min_amount: Number(data.min_amount) || 0,
+    };
 
-    // navigate('/campaigns') // перенаправлення після створення
-  }
+    mutate(prepared);
+  };
 
   return (
     <main className="relative flex items-center justify-center bg-gradient-to-r from-rose-400 via-orange-300 to-amber-300">
@@ -42,14 +54,14 @@ export default function CreateBank() {
               name="title"
               control={control}
               placeholder="На психолога"
-              rules={{ required: "Назва банки обов'язкова" }}
+              rules={{ required: "Назва обов'язкова" }}
             />
 
             <TextareaElement
               label="Опис"
               name="description"
               control={control}
-              placeholder="На психолога"
+              placeholder="Опишіть ціль збору..."
             />
 
             <InputElement
@@ -69,11 +81,15 @@ export default function CreateBank() {
             />
           </div>
 
-          <Button type="submit" className="h-14">
-            Створити
+          {error && (
+            <p className="text-red-600 text-sm">{error.message}</p>
+          )}
+
+          <Button type="submit" className="h-14" disabled={isPending}>
+            {isPending ? "Створюємо..." : "Створити"}
           </Button>
         </form>
       </div>
     </main>
-  )
+  );
 }

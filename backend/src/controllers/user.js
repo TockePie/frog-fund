@@ -6,6 +6,7 @@ import {
   UsersArray,
   UserUpdateObject
 } from '../models/user.js'
+import prisma from '../prisma.js'
 import { UserService } from '../services/user.js'
 import { HttpError } from '../utils/http-error.js'
 
@@ -54,4 +55,18 @@ export async function deleteUser(req, res) {
 
   await UserService.deleteUser(id)
   res.status(204).send()
+}
+export async function getMe(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    include: {
+      Campaign: true // ⬅ ВСІ банки цього користувача
+    }
+  })
+
+  res.status(200).json(user)
 }

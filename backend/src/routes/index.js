@@ -9,11 +9,11 @@ import UserRoutes from './user.js'
 
 const router = express.Router()
 
+router.use('/auth', AuthRoutes)
 router.use('/users', UserRoutes)
 router.use('/campaigns', CampaignRoutes)
 router.use('/donations', DonationRoutes)
 router.use('/raffles', RaffleRoutes)
 router.use('/notifications', NotificationRoutes)
-router.use('/auth', AuthRoutes)
 
 export default router

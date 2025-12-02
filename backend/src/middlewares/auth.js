@@ -1,20 +1,28 @@
 import jwt from 'jsonwebtoken'
 
-import { HttpError } from '../utils/http-error.js'
+import prisma from '../prisma.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key'
-
-export function authMiddleware(req, res, next) {
-  const header = req.headers.authorization
-  if (!header) throw new HttpError('Missing token', 401)
-
-  const token = header.replace('Bearer ', '')
-
+export async function authMiddleware(req, res, next) {
   try {
-    const decoded = jwt.verify(token, JWT_SECRET)
-    req.user = decoded
+    const token = req.headers.authorization?.split(' ')[1]
+    if (!token) throw new Error('No token')
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    // 🔥 ВАЖЛИВО: включаємо Campaign[]
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: {
+        Campaign: true // ← ось через це банки з'являться у профілі!
+      }
+    })
+
+    if (!user) throw new Error('User not found')
+
+    req.user = user
     next()
   } catch (err) {
-    res.status(401).json({ error: 'Invalid or expired token' })
+    console.error('AUTH ERROR:', err)
+    res.status(401).json({ message: 'Unauthorized' })
   }
 }

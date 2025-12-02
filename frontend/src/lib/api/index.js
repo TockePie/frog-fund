@@ -1,8 +1,15 @@
-import axios from 'axios'
+import axios from "axios";
+import Cookies from "js-cookie";
 
 const apiInstance = axios.create({
-  baseURL: import.meta.env.VITE_BASE_URL,
+  baseURL: "http://localhost:8000",
   withCredentials: true
-})
+});
 
-export default apiInstance
+apiInstance.interceptors.request.use((config) => {
+  const token = Cookies.get("jwt");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export default apiInstance;

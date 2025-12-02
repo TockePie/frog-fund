@@ -16,12 +16,17 @@ export default function AppRoutes() {
       <Routes location={background || location}>
         <Route index element={<App />} />
         <Route path="campaigns" element={<Campaigns />} />
+
         <Route path="campaign">
           <Route path="new" element={<CreateBank />} />
           <Route path=":id" element={<OpenCampaign />} />
         </Route>
+
+        {/* 🔥 РОЗІГРАШІ ТЕПЕР НЕ ВИКОРИСТОВУЮТЬ OpenCampaign */}
         <Route path="raffles" element={<RafflesPage />} />
-        <Route path="raffles/:id" element={<OpenCampaign />} />
+        
+        {/* Якщо треба сторінка конкретного розіграшу — створимо окремо */}
+        {/* <Route path="raffles/:id" element={<RaffleDetails />} /> */}
       </Routes>
 
       {background && (

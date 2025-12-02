@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 import { useForm } from "react-hook-form"
+import { useNavigate } from "react-router-dom"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation } from "@tanstack/react-query"
 import Cookies from "js-cookie"
@@ -16,20 +17,17 @@ import {
 import { logIn } from "@/lib/api/auth"
 import InputElement from "@/pages/Campaign/NewCampaign/input-element"
 
-import RegisterModal from "./register"
+import RegisterModal from "./signup"
 
+// 📌 Валідація полів
 const loginSchema = z.object({
   email: z.email("Неправильна пошта"),
   password: z.string().min(8, "Пароль має мінімум 8 символів"),
 })
 
-/**
- * LoginModal
- * - режим 1 (як раніше): <LoginModal triggerComp={<button>Профіль</button>} />
- * - режим 2 (керований ззовні): <LoginModal open={...} onOpenChange={...} />
- */
 export default function LoginModal({ triggerComp, open, onOpenChange }) {
   const closeRef = useRef(null)
+  const navigate = useNavigate()
 
   const { control, handleSubmit, reset } = useForm({
     resolver: zodResolver(loginSchema),
@@ -41,26 +39,31 @@ export default function LoginModal({ triggerComp, open, onOpenChange }) {
 
   const isControlled = typeof open === "boolean"
 
+  // 📌 Запит на бекенд
   const handleSubmitForm = (form) => {
     mutate(form)
   }
 
-  // Успішний логін → зберігаємо токен і закриваємо модалку
+  // ⭐ УСПІШНИЙ ЛОГІН → ЗБЕРЕГТИ JWT + ПЕРЕЙТИ В КАБІНЕТ
   useEffect(() => {
     if (!isSuccess || !data?.data?.token) return
 
+    // Зберігаємо JWT на 7 днів
     Cookies.set("jwt", data.data.token, { expires: 7 })
 
+    // 🔥 АВТОМАТИЧНИЙ ПЕРЕХІД В КАБІНЕТ
+    navigate("/campaigns")
+
+    // Закриваємо модалку (керований або стандартний режим)
     if (onOpenChange) {
-      // Керований режим (для RafflesPage)
       onOpenChange(false)
     } else {
-      // Старий режим з кнопкою-тригером
       const timer = setTimeout(() => closeRef.current?.click(), 1500)
       return () => clearTimeout(timer)
     }
-  }, [isSuccess, data, onOpenChange])
+  }, [isSuccess, data, navigate, onOpenChange])
 
+  // 📌 Очищення форми при закритті модалки
   const handleDialogChange = (isOpen) => {
     if (!isOpen) {
       reset()
@@ -76,10 +79,7 @@ export default function LoginModal({ triggerComp, open, onOpenChange }) {
       open={isControlled ? open : undefined}
       onOpenChange={handleDialogChange}
     >
-      {/* У керованому режимі тригера може не бути */}
-      {triggerComp && (
-        <DialogTrigger asChild>{triggerComp}</DialogTrigger>
-      )}
+      {triggerComp && <DialogTrigger asChild>{triggerComp}</DialogTrigger>}
 
       <DialogContent className="flex w-full max-w-lg flex-col items-center gap-10 rounded-3xl bg-stone-100 p-10 text-center shadow-xl">
         <DialogTitle className="text-3xl font-bold">Увійти</DialogTitle>
@@ -103,7 +103,7 @@ export default function LoginModal({ triggerComp, open, onOpenChange }) {
           </Button>
         </form>
 
-        {/* Кнопка відкриває RegisterModal */}
+        {/* Кнопка → відкриває модалку реєстрації */}
         <RegisterModal
           triggerComp={
             <Button variant="ghost" className="font-semibold">
@@ -113,7 +113,6 @@ export default function LoginModal({ triggerComp, open, onOpenChange }) {
         />
       </DialogContent>
 
-      {/* приховане авто-закриття (для старого режиму) */}
       <DialogClose ref={closeRef} className="hidden" />
     </Dialog>
   )
