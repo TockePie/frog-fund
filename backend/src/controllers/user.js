@@ -1,12 +1,12 @@
 import bcrypt from 'bcryptjs'
 
+import prisma from '../lib/prisma.js'
 import {
   UserBodyObject,
   UserObject,
   UsersArray,
   UserUpdateObject
 } from '../models/user.js'
-import prisma from '../prisma.js'
 import { UserService } from '../services/user.js'
 import { HttpError } from '../utils/http-error.js'
 
@@ -30,10 +30,13 @@ export async function getUserById(req, res) {
 export async function createUser(req, res) {
   const data = UserBodyObject.parse(req.body)
   const hashed = await bcrypt.hash(data.password, 10)
+
   const created = await UserService.createUser({
     ...data,
-    password: hashed
+    password: hashed,
+    balance: 1000 // 💰 даємо стартові 1000 грн
   })
+
   const response = UserObject.parse(created)
   res.status(201).json(response)
 }

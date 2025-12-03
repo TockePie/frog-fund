@@ -1,172 +1,188 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
-import LoginModal from "@/components/AuthModal/login";
 import { getAllCampaigns } from "@/lib/api/campaign";
+import { getMe } from "@/lib/api/user";
 
-import golub from "/golub.webp";
-
-export default function RafflesPage() {
+export default function CampaignsPage() {
   const navigate = useNavigate();
+  const [filter, setFilter] = useState("all");
 
-  const [authOpen, setAuthOpen] = useState(false);
-  const [redirectId, setRedirectId] = useState(null);
+  // Поточний користувач
+  const meQuery = useQuery({
+    queryKey: ["me"],
+    queryFn: getMe,
+  });
 
-  // 🔥 Автовідкриття модалки при вході
-  useEffect(() => {
-    const token = Cookies.get("jwt");
-    if (!token) setAuthOpen(true);
-  }, []);
-
-  // 🔥 Вийти
-  const logout = () => {
-    Cookies.remove("jwt");
-    setAuthOpen(true);
-  };
-
-  // 🔥 Завантаження зборів
-  const { data, isLoading, error } = useQuery({
+  // Всі збори
+  const campaignsQuery = useQuery({
     queryKey: ["campaigns"],
     queryFn: getAllCampaigns,
   });
 
-  if (isLoading)
-    return <p className="p-10 text-center text-xl">Завантаження...</p>;
+  if (meQuery.isLoading || campaignsQuery.isLoading)
+    return <p className="p-10 text-center">Завантаження...</p>;
 
-  if (error)
+  if (meQuery.error || campaignsQuery.error)
     return (
-      <p className="p-10 text-center text-xl text-red-600">
-        Помилка: {error.message}
-      </p>
+      <p className="p-10 text-center text-red-600">Помилка завантаження</p>
     );
 
-  const campaigns = data.data;
+  const me = meQuery.data.data;
+  const campaigns = campaignsQuery.data.data;
 
-  // Клік по картці
-  const handleOpen = (id) => {
-    const token = Cookies.get("jwt");
-    if (!token) {
-      setRedirectId(id);
-      setAuthOpen(true);
-      return;
-    }
-    navigate(`/campaign/${id}`);
-  };
+  // ===== ФІЛЬТРАЦІЯ =====
+  let list = campaigns.filter((c) => {
+    const isMine = c.organizer_id === me.id;
+    const iDonated = c.Donation?.some((d) => d.donor_id === me.id);
+    const iWon = c.Raffle?.some((r) =>
+      r.RaffleWinner?.some((w) => w.user_id === me.id)
+    );
 
-  // Після логіну
-  const handleAuthChange = (isOpen) => {
-    setAuthOpen(isOpen);
-    const token = Cookies.get("jwt");
+    return isMine || iDonated || iWon;
+  });
 
-    if (!isOpen && token && redirectId) {
-      navigate(`/campaign/${redirectId}`);
-    }
-  };
+  if (filter === "mine") list = campaigns.filter((c) => c.organizer_id === me.id);
 
-  // === Функція визначення кольору рамки ===
-  const getBorderColor = (c) => {
-    const progress = (c.collected_amount ?? 0) / (c.target_amount || 1);
+  if (filter === "supported")
+    list = campaigns.filter((c) =>
+      c.Donation?.some((d) => d.donor_id === me.id)
+    );
 
-    if (c.status === "CLOSED") return "border-green-500";
-    if (progress < 0.2) return "border-red-400";
-    if (progress < 0.8) return "border-yellow-400";
-    return "border-orange-500";
+  if (filter === "closed")
+    list = campaigns.filter((c) => c.status === "CLOSED");
+
+  // ===== СОРТУВАННЯ =====
+  list = [...list].sort((a, b) => {
+    const aClosed = a.status === "CLOSED";
+    const bClosed = b.status === "CLOSED";
+    return aClosed - bClosed;
+  });
+
+  // 🔥 ВИХІД
+  const logOut = () => {
+    Cookies.remove("jwt");
+    navigate("/"); // або /raffles
   };
 
   return (
-    <>
-      <LoginModal open={authOpen} onOpenChange={handleAuthChange} />
-
-      <div className="min-h-screen w-full bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] py-10 px-6 flex justify-center">
-
-        <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl p-10 relative">
-
-          {/* Назад */}
-          <button
-            onClick={() => navigate(-1)}
-            className="absolute top-6 left-6 flex items-center gap-2 text-xl font-bold text-gray-800 hover:opacity-90 transition"
-          >
-            ← Назад
-          </button>
-
-          {/* Вийти */}
-          <button
-            onClick={logout}
-            className="absolute top-6 right-6 px-5 py-2 rounded-full bg-black text-white font-semibold hover:bg-gray-900 transition"
-          >
-            Вийти
-          </button>
-
-          <h1 className="text-5xl font-extrabold text-[#2b2b2b] mb-10 text-center">
-            Усі збори
-          </h1>
-
-          <div className="flex flex-col gap-8">
-            {campaigns.map((c) => {
-              const progress =
-                ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
-
-              return (
-                <div
-                  key={c.id}
-                  onClick={() => handleOpen(c.id)}
-                  className={`block cursor-pointer flex flex-col md:flex-row 
-                             bg-gradient-to-r from-[#ffe6e1] to-[#fff5d7]
-                             rounded-2xl p-6 shadow-lg hover:scale-[1.02] hover:shadow-xl transition border-4 ${getBorderColor(
-                               c
-                             )}`}
-                >
-                  {/* Ліва частина */}
-                  <div className="flex flex-1 gap-4 items-center">
-                    <img
-                      src={golub}
-                      alt="avatar"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-white"
-                    />
-
-                    <div className="flex flex-col w-full">
-                      <h2 className="text-2xl font-bold">{c.title}</h2>
-
-                      <div className="w-full h-3 bg-white rounded-full mt-2 overflow-hidden">
-                        <div
-                          className="h-full bg-orange-400"
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-
-                      <p className="text-xl font-bold mt-2">
-                        {c.collected_amount} ₴ / {c.target_amount} ₴
-                      </p>
-
-                      <p className="text-gray-600 text-sm">
-                        {c.user?.name ?? "Анонім"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Права частина */}
-                  <div className="flex flex-1 flex-col justify-center mt-6 md:mt-0 md:pl-10">
-                    <p className="text-lg font-semibold">
-                      Мінімальний внесок:{" "}
-                      <span className="font-bold">{c.min_amount ?? 0} ₴</span>
-                    </p>
-
-                    <p className="text-lg font-semibold">
-                      Статус:{" "}
-                      <span className="font-bold">
-                        {c.status === "CLOSED" ? "Завершено" : "Активний"}
-                      </span>
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+    <div className="flex min-h-screen justify-center bg-[#f9f9f9] p-6">
+      <div className="w-full max-w-6xl rounded-3xl bg-white p-10 shadow-lg">
+        {/* ПРОФІЛЬ */}
+        <div className="mb-8 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <img
+              src="/golub.webp"
+              alt="Avatar"
+              className="h-16 w-16 rounded-full object-cover"
+            />
+            <div>
+              <h2 className="text-2xl font-bold">{me.name}</h2>
+              <p className="text-gray-500">
+                Баланс: <strong>{me.balance ?? 0}₴</strong>
+              </p>
+            </div>
           </div>
 
+          <div className="flex gap-4">
+            <button
+              onClick={logOut}
+              className="rounded-full bg-red-500 px-6 py-3 text-lg font-semibold text-white hover:bg-red-600 transition"
+            >
+              Вийти
+            </button>
+
+            <button
+              onClick={() => navigate("/campaign/new")}
+              className="rounded-full bg-black px-6 py-3 text-lg font-semibold text-white"
+            >
+              + Нова банка
+            </button>
+          </div>
+        </div>
+
+        {/* Вкладки */}
+        <h2 className="mb-4 text-3xl font-bold">Усі збори</h2>
+        <div className="mb-8 flex flex-wrap gap-3">
+          {[
+            ["all", "Усі"],
+            ["mine", "Мої збори"],
+            ["supported", "Підтримані збори"],
+            ["closed", "Мої закриті збори"],
+          ].map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`px-4 py-2 rounded-full ${
+                filter === key ? "bg-black text-white" : "bg-gray-200"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* СПИСОК */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {list.map((c) => {
+            const progress =
+              ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
+
+            const isClosed = c.status === "CLOSED";
+            const myBank = c.organizer_id === me.id;
+
+            const borderColor = myBank
+              ? "border-blue-400"
+              : isClosed
+              ? "border-green-400"
+              : "border-orange-400";
+
+            const goToCampaign = () => {
+              // 🔥 якщо закритий і вже є winner_id — одразу на сторінку переможця
+              if (isClosed && c.winner_id) {
+                navigate(`/campaigns/${c.id}/winner`);
+              } else {
+                navigate(`/campaign/${c.id}`);
+              }
+            };
+
+            return (
+              <div
+                key={c.id}
+                onClick={goToCampaign}
+                className={`cursor-pointer rounded-2xl border-2 ${borderColor} p-5 hover:shadow-xl transition relative bg-white`}
+              >
+                <h3 className="text-lg font-bold mb-1">{c.title}</h3>
+
+                <p className="text-sm text-gray-600">
+                  {c.collected_amount}₴ / {c.target_amount ?? 0}₴
+                </p>
+
+                <div className="my-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${
+                      isClosed ? "bg-green-500" : "bg-orange-400"
+                    }`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+
+                <p className="text-sm text-gray-500 mt-2">
+                  {myBank ? "Ви" : c.user?.name}
+                </p>
+
+                {isClosed && (
+                  <p className="absolute right-4 bottom-4 text-sm font-semibold text-gray-600">
+                    Завершений
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
-    </>
+    </div>
   );
 }

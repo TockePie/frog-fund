@@ -10,12 +10,22 @@ export function getCampaignById(id) {
   return apiInstance.get(`/campaigns/${id}`);
 }
 
-// 🔥 ОТРИМАТИ ВСІ БАНКИ (для сторінки сортування / списку)
+// Отримати всі банки
 export function getAllCampaigns() {
   return apiInstance.get("/campaigns");
 }
 
 // Закрити банку
 export function closeCampaign(id) {
-  return apiInstance.put(`/campaigns/${id}`, { status: "CLOSED" });
+  return apiInstance.put(`/campaigns/${id}/close`);
+}
+
+// Донат у банку
+export function donateToCampaign(id, data) {
+  return apiInstance.post(`/campaigns/${id}/donate`, data);
+}
+
+// 🔥 Провести розіграш
+export function runRaffle(id) {
+  return apiInstance.post(`/campaigns/${id}/raffle`);
 }

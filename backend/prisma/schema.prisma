@@ -20,9 +20,12 @@ model User {
   password      String
   Campaign      Campaign[]
   Donation      Donation[]
+  balance       Int            @default(1000)
   Notification  Notification[]
   raffleWinners RaffleWinner[]
   raffles       Raffle[]
+
+  wonCampaigns Campaign[] @relation("WinnerRelation")
 }
 
 model Campaign {
@@ -33,9 +36,13 @@ model Campaign {
   target_amount    Int?
   collected_amount Int            @default(0)
   status           CampaignStatus @default(DRAFT)
-  user             User           @relation(fields: [organizer_id], references: [id])
-  Donation         Donation[]
-  Raffle           Raffle[]
+
+  winner_id String? @db.Uuid
+  winner    User?   @relation("WinnerRelation", fields: [winner_id], references: [id]) // ⭐ ТОЧНО ТА САМА НАЗВА!
+
+  user     User       @relation(fields: [organizer_id], references: [id])
+  Donation Donation[]
+  Raffle   Raffle[]
 }
 
 model Raffle {
