@@ -1,11 +1,12 @@
+// controllers/campaign.js
 import crypto from 'crypto'
 
 import prisma from '../lib/prisma.js'
 import { HttpError } from '../utils/http-error.js'
 
-// ============================
-// GET ALL CAMPAIGNS
-// ============================
+/* ============================
+   GET ALL CAMPAIGNS
+============================ */
 export async function getAllCampaigns(_req, res) {
   const items = await prisma.campaign.findMany({
     include: {
@@ -13,21 +14,24 @@ export async function getAllCampaigns(_req, res) {
       Donation: true,
       Raffle: {
         include: {
-          RaffleWinner: {
-            include: { user: true }
-          }
+          RaffleWinner: { include: { user: true } }
         }
       },
       winner: true
     }
   })
 
-  res.status(200).json(items)
+  const prepared = items.map((c) => ({
+    ...c,
+    winner_id: c.winner_id
+  }))
+
+  res.status(200).json(prepared)
 }
 
-// ============================
-// GET CAMPAIGN BY ID
-// ============================
+/* ============================
+   GET CAMPAIGN BY ID
+============================ */
 export async function getCampaignById(req, res) {
   const { id } = req.params
 
@@ -38,9 +42,7 @@ export async function getCampaignById(req, res) {
       Donation: true,
       Raffle: {
         include: {
-          RaffleWinner: {
-            include: { user: true }
-          }
+          RaffleWinner: { include: { user: true } }
         }
       },
       winner: true
@@ -51,13 +53,14 @@ export async function getCampaignById(req, res) {
 
   res.status(200).json({
     ...item,
+    winner_id: item.winner_id,
     currentUserId: req.user.id
   })
 }
 
-// ============================
-// CREATE CAMPAIGN
-// ============================
+/* ============================
+   CREATE CAMPAIGN
+============================ */
 export async function createCampaign(req, res) {
   const { title, description, target_amount } = req.body
 
@@ -77,48 +80,37 @@ export async function createCampaign(req, res) {
   res.status(201).json(created)
 }
 
-// ============================
-// UPDATE CAMPAIGN
-// ============================
+/* ============================
+   UPDATE CAMPAIGN (проста версія)
+============================ */
 export async function updateCampaign(req, res) {
   const { id } = req.params
-  const data = req.body
+  const { title, description, target_amount, status } = req.body
 
   const existing = await prisma.campaign.findUnique({ where: { id } })
   if (!existing) throw new HttpError('Campaign not found', 404)
-
   if (existing.organizer_id !== req.user.id)
     throw new HttpError('Forbidden', 403)
 
   const updated = await prisma.campaign.update({
     where: { id },
-    data,
-    include: { user: true }
+    data: {
+      title: title ?? existing.title,
+      description: description ?? existing.description,
+      target_amount:
+        typeof target_amount === 'number'
+          ? target_amount
+          : existing.target_amount,
+      status: status ?? existing.status
+    }
   })
 
   res.status(200).json(updated)
 }
 
-// ============================
-// DELETE CAMPAIGN
-// ============================
-export async function deleteCampaign(req, res) {
-  const { id } = req.params
-
-  const existing = await prisma.campaign.findUnique({ where: { id } })
-  if (!existing) throw new HttpError('Campaign not found', 404)
-
-  if (existing.organizer_id !== req.user.id)
-    throw new HttpError('Forbidden', 403)
-
-  await prisma.campaign.delete({ where: { id } })
-
-  res.status(204).send()
-}
-
-// ============================
-// DONATE TO CAMPAIGN
-// ============================
+/* ============================
+   DONATE + AUTO-CLOSE + PAYOUT
+============================ */
 export async function donateToCampaign(req, res) {
   const { id } = req.params
   const { amount, comment } = req.body
@@ -128,18 +120,20 @@ export async function donateToCampaign(req, res) {
   const campaign = await prisma.campaign.findUnique({ where: { id } })
   if (!campaign) throw new HttpError('Campaign not found', 404)
 
+  if (campaign.status === 'CLOSED') {
+    throw new HttpError('Campaign already closed', 400)
+  }
+
   const donor = await prisma.user.findUnique({
     where: { id: req.user.id }
   })
 
   if (!donor) throw new HttpError('User not found', 404)
+  if (donor.balance < amount) throw new HttpError('Not enough balance', 400)
 
-  if (donor.balance < amount) {
-    throw new HttpError('Not enough balance', 400)
-  }
-
-  const donation = await prisma.$transaction(async (tx) => {
-    const d = await tx.donation.create({
+  const result = await prisma.$transaction(async (tx) => {
+    // 1) Створюємо донат
+    const donation = await tx.donation.create({
       data: {
         amount,
         comment: comment || '',
@@ -149,47 +143,116 @@ export async function donateToCampaign(req, res) {
       }
     })
 
+    // 2) Знімаємо кошти з балансу користувача
     await tx.user.update({
       where: { id: donor.id },
       data: { balance: { decrement: amount } }
     })
 
-    await tx.campaign.update({
+    // 3) Оновлюємо зібрану суму
+    const updatedCampaign = await tx.campaign.update({
       where: { id },
       data: { collected_amount: { increment: amount } }
     })
 
-    return d
+    let autoClosed = false
+
+    // 4) Автоматичне закриття, якщо зібрано target_amount
+    if (
+      updatedCampaign.target_amount &&
+      updatedCampaign.collected_amount >= updatedCampaign.target_amount &&
+      updatedCampaign.status !== 'CLOSED'
+    ) {
+      autoClosed = true
+
+      // Виплата організатору
+      if (updatedCampaign.collected_amount > 0) {
+        await tx.user.update({
+          where: { id: updatedCampaign.organizer_id },
+          data: {
+            balance: { increment: updatedCampaign.collected_amount }
+          }
+        })
+
+        await tx.notification.create({
+          data: {
+            user_id: updatedCampaign.organizer_id,
+            campaign_id: updatedCampaign.id,
+            message: `💰 Ваш збір "${updatedCampaign.title}" автоматично завершено. Кошти ${updatedCampaign.collected_amount}₴ зараховано на ваш баланс.`,
+            status: 'PENDING'
+          }
+        })
+      }
+
+      await tx.campaign.update({
+        where: { id: updatedCampaign.id },
+        data: { status: 'CLOSED' }
+      })
+    }
+
+    return { donation, autoClosed }
   })
 
-  res.status(201).json({ success: true, donation })
+  res.status(201).json({
+    success: true,
+    donation: result.donation,
+    autoClosed: result.autoClosed
+  })
 }
 
-// ============================
-// CLOSE CAMPAIGN
-// ============================
+/* ============================
+   CLOSE CAMPAIGN + PAYOUT (ручне)
+============================ */
 export async function closeCampaign(req, res) {
   const { id } = req.params
 
-  const existing = await prisma.campaign.findUnique({ where: { id } })
-  if (!existing) throw new HttpError('Campaign not found', 404)
+  const existing = await prisma.campaign.findUnique({
+    where: { id }
+  })
 
+  if (!existing) throw new HttpError('Campaign not found', 404)
   if (existing.organizer_id !== req.user.id)
     throw new HttpError('Forbidden', 403)
 
-  if (existing.status === 'CLOSED') return res.status(200).json(existing)
+  // Якщо вже закрито — нічого не робимо, щоб не платити вдруге
+  if (existing.status === 'CLOSED') {
+    return res.status(200).json(existing)
+  }
 
-  const updated = await prisma.campaign.update({
-    where: { id },
-    data: { status: 'CLOSED' }
+  const updated = await prisma.$transaction(async (tx) => {
+    // Виплачуємо організатору ВСЕ, що зібрано на момент ручного закриття
+    if (existing.collected_amount > 0) {
+      await tx.user.update({
+        where: { id: existing.organizer_id },
+        data: {
+          balance: { increment: existing.collected_amount }
+        }
+      })
+
+      await tx.notification.create({
+        data: {
+          user_id: existing.organizer_id,
+          campaign_id: existing.id,
+          message: `💰 Кошти ${existing.collected_amount}₴ зараховано на ваш баланс за збір "${existing.title}".`,
+          status: 'PENDING'
+        }
+      })
+    }
+
+    const updatedCampaign = await tx.campaign.update({
+      where: { id },
+      data: { status: 'CLOSED' }
+    })
+
+    return updatedCampaign
   })
 
   res.status(200).json(updated)
 }
 
-// ============================
-// RUN RAFFLE + SEND NOTIFICATIONS
-// ============================
+/* ============================
+   RUN RAFFLE
+============================ */
 export async function runRaffle(req, res) {
   const { id } = req.params
 
@@ -207,12 +270,10 @@ export async function runRaffle(req, res) {
   if (campaign.Donation.length === 0)
     throw new HttpError('No participants', 400)
 
-  // 🎟 Generate tickets
   const tickets = campaign.Donation.map((d) => d.donor_id)
   const winnerId = tickets[Math.floor(Math.random() * tickets.length)]
 
   const result = await prisma.$transaction(async (tx) => {
-    // 1. Create raffle entry
     const raffle = await tx.raffle.create({
       data: {
         campaign_id: id,
@@ -225,33 +286,32 @@ export async function runRaffle(req, res) {
       }
     })
 
-    // 2. Create raffle winner
-    const raffleWinner = await tx.raffleWinner.create({
-      data: { raffle_id: raffle.id, user_id: winnerId },
-      include: { user: true }
+    await tx.raffleWinner.create({
+      data: { raffle_id: raffle.id, user_id: winnerId }
     })
 
-    // 3. Store winner_id in campaign
     const updatedCampaign = await tx.campaign.update({
       where: { id },
       data: { winner_id: winnerId },
       include: { winner: true }
     })
 
-    // 4. Send notification to winner
+    // 🔔 Сповіщення переможцю
     await tx.notification.create({
       data: {
         user_id: winnerId,
+        campaign_id: campaign.id,
         message: `🎉 Вітаємо! Ви перемогли у розіграші в зборі "${campaign.title}".`,
         status: 'PENDING'
       }
     })
 
-    // 5. Send notification to organizer
+    // 🔔 Сповіщення організатору
     await tx.notification.create({
       data: {
         user_id: campaign.organizer_id,
-        message: `Ваш збір "${campaign.title}" успішно розіграно! Переможець: ${raffleWinner.user.name}.`,
+        campaign_id: campaign.id,
+        message: `Ваш збір "${campaign.title}" успішно розіграно!`,
         status: 'PENDING'
       }
     })
@@ -264,4 +324,38 @@ export async function runRaffle(req, res) {
     message: 'Raffle completed',
     winner: result.winner
   })
+}
+
+/* ============================
+   DELETE CAMPAIGN
+============================ */
+export async function deleteCampaign(req, res) {
+  const { id } = req.params
+
+  const existing = await prisma.campaign.findUnique({
+    where: { id },
+    include: {
+      Donation: true,
+      Raffle: { include: { RaffleWinner: true } },
+      Notification: true
+    }
+  })
+
+  if (!existing) throw new HttpError('Campaign not found', 404)
+  if (existing.organizer_id !== req.user.id)
+    throw new HttpError('Forbidden', 403)
+
+  await prisma.$transaction(async (tx) => {
+    for (const raffle of existing.Raffle) {
+      await tx.raffleWinner.deleteMany({ where: { raffle_id: raffle.id } })
+    }
+
+    await tx.raffle.deleteMany({ where: { campaign_id: id } })
+    await tx.donation.deleteMany({ where: { campaign_id: id } })
+    await tx.notification.deleteMany({ where: { campaign_id: id } })
+
+    await tx.campaign.delete({ where: { id } })
+  })
+
+  res.status(200).json({ success: true, message: 'Campaign deleted' })
 }

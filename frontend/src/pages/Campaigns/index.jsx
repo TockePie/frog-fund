@@ -3,7 +3,9 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import Cookies from "js-cookie";
 
+import NotificationBell from "@/components/NotificationBell";
 import { getAllCampaigns } from "@/lib/api/campaign";
+import { getNotifications } from "@/lib/api/notifications";
 import { getMe } from "@/lib/api/user";
 
 export default function CampaignsPage() {
@@ -13,65 +15,81 @@ export default function CampaignsPage() {
   // Поточний користувач
   const meQuery = useQuery({
     queryKey: ["me"],
-    queryFn: getMe,
+    queryFn: () => getMe().then((res) => res.data),
   });
 
-  // Всі збори
+  // Банки
   const campaignsQuery = useQuery({
     queryKey: ["campaigns"],
-    queryFn: getAllCampaigns,
+    queryFn: () => getAllCampaigns().then((res) => res.data),
   });
 
-  if (meQuery.isLoading || campaignsQuery.isLoading)
+  // Сповіщення (єдиний запит на notifications)
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => getNotifications().then((res) => res.data),
+  });
+
+  if (
+    meQuery.isLoading ||
+    campaignsQuery.isLoading ||
+    notificationsQuery.isLoading
+  ) {
     return <p className="p-10 text-center">Завантаження...</p>;
+  }
 
-  if (meQuery.error || campaignsQuery.error)
-    return (
-      <p className="p-10 text-center text-red-600">Помилка завантаження</p>
-    );
+  const me = meQuery.data;
+  const campaigns = campaignsQuery.data;
+  const notifications = notificationsQuery.data ?? [];
 
-  const me = meQuery.data.data;
-  const campaigns = campaignsQuery.data.data;
+  // Переможні кампанії (за нотифікаціями)
+  const winnerCampaigns = new Set(
+    notifications
+      .filter((n) => n.status === "PENDING" && n.campaign_id)
+      .map((n) => n.campaign_id)
+  );
 
-  // ===== ФІЛЬТРАЦІЯ =====
-  let list = campaigns.filter((c) => {
-    const isMine = c.organizer_id === me.id;
-    const iDonated = c.Donation?.some((d) => d.donor_id === me.id);
-    const iWon = c.Raffle?.some((r) =>
-      r.RaffleWinner?.some((w) => w.user_id === me.id)
-    );
+  // ========= ФІЛЬТРИ =========
+  let list = [];
 
-    return isMine || iDonated || iWon;
-  });
+  if (filter === "all") {
+    list = campaigns.filter((c) => {
+      const mine = c.organizer_id === me.id;
+      const supported = c.Donation?.some((d) => d.donor_id === me.id);
+      const won = winnerCampaigns.has(c.id);
+      return mine || supported || won;
+    });
+  }
 
-  if (filter === "mine") list = campaigns.filter((c) => c.organizer_id === me.id);
+  if (filter === "mine") {
+    list = campaigns.filter((c) => c.organizer_id === me.id);
+  }
 
-  if (filter === "supported")
+  if (filter === "supported") {
     list = campaigns.filter((c) =>
       c.Donation?.some((d) => d.donor_id === me.id)
     );
+  }
 
-  if (filter === "closed")
-    list = campaigns.filter((c) => c.status === "CLOSED");
+  if (filter === "closed") {
+    list = campaigns.filter(
+      (c) => c.organizer_id === me.id && c.status === "CLOSED"
+    );
+  }
 
-  // ===== СОРТУВАННЯ =====
-  list = [...list].sort((a, b) => {
-    const aClosed = a.status === "CLOSED";
-    const bClosed = b.status === "CLOSED";
-    return aClosed - bClosed;
-  });
-
-  // 🔥 ВИХІД
+  // ========= ВИХІД =========
   const logOut = () => {
     Cookies.remove("jwt");
-    navigate("/"); // або /raffles
+    navigate("/");
   };
 
+  // ========= РЕНДЕР =========
   return (
     <div className="flex min-h-screen justify-center bg-[#f9f9f9] p-6">
       <div className="w-full max-w-6xl rounded-3xl bg-white p-10 shadow-lg">
-        {/* ПРОФІЛЬ */}
+        {/* ПРОФІЛЬ + Дзвіночок */}
         <div className="mb-8 flex items-center justify-between">
+          {/* Ліва частина профілю */}
           <div className="flex items-center gap-4">
             <img
               src="/golub.webp"
@@ -86,7 +104,15 @@ export default function CampaignsPage() {
             </div>
           </div>
 
-          <div className="flex gap-4">
+          {/* Права частина — Дзвіночок + Кнопки */}
+          <div className="flex items-center gap-4">
+            {/* 🔔 Дзвіночок */}
+            <NotificationBell
+              notifications={notifications}
+              isLoading={notificationsQuery.isLoading}
+            />
+
+            {/* Вийти */}
             <button
               onClick={logOut}
               className="rounded-full bg-red-500 px-6 py-3 text-lg font-semibold text-white hover:bg-red-600 transition"
@@ -94,6 +120,7 @@ export default function CampaignsPage() {
               Вийти
             </button>
 
+            {/* Нова банка */}
             <button
               onClick={() => navigate("/campaign/new")}
               className="rounded-full bg-black px-6 py-3 text-lg font-semibold text-white"
@@ -103,14 +130,14 @@ export default function CampaignsPage() {
           </div>
         </div>
 
-        {/* Вкладки */}
+        {/* ФІЛЬТРИ */}
         <h2 className="mb-4 text-3xl font-bold">Усі збори</h2>
         <div className="mb-8 flex flex-wrap gap-3">
           {[
             ["all", "Усі"],
             ["mine", "Мої збори"],
-            ["supported", "Підтримані збори"],
-            ["closed", "Мої закриті збори"],
+            ["supported", "Підтримані"],
+            ["closed", "Закриті"],
           ].map(([key, label]) => (
             <button
               key={key}
@@ -127,32 +154,20 @@ export default function CampaignsPage() {
         {/* СПИСОК */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {list.map((c) => {
+            const isWinner = winnerCampaigns.has(c.id);
             const progress =
               ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
 
-            const isClosed = c.status === "CLOSED";
-            const myBank = c.organizer_id === me.id;
-
-            const borderColor = myBank
-              ? "border-blue-400"
-              : isClosed
-              ? "border-green-400"
-              : "border-orange-400";
-
             const goToCampaign = () => {
-              // 🔥 якщо закритий і вже є winner_id — одразу на сторінку переможця
-              if (isClosed && c.winner_id) {
-                navigate(`/campaigns/${c.id}/winner`);
-              } else {
-                navigate(`/campaign/${c.id}`);
-              }
+              if (isWinner) navigate(`/campaigns/${c.id}/winner`);
+              else navigate(`/campaign/${c.id}`);
             };
 
             return (
               <div
                 key={c.id}
                 onClick={goToCampaign}
-                className={`cursor-pointer rounded-2xl border-2 ${borderColor} p-5 hover:shadow-xl transition relative bg-white`}
+                className="cursor-pointer rounded-2xl border-2 border-green-400 p-5 hover:shadow-xl transition bg-white relative"
               >
                 <h3 className="text-lg font-bold mb-1">{c.title}</h3>
 
@@ -162,18 +177,16 @@ export default function CampaignsPage() {
 
                 <div className="my-2 h-2 w-full bg-gray-200 rounded-full overflow-hidden">
                   <div
-                    className={`h-full ${
-                      isClosed ? "bg-green-500" : "bg-orange-400"
-                    }`}
+                    className="h-full bg-green-500"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
 
                 <p className="text-sm text-gray-500 mt-2">
-                  {myBank ? "Ви" : c.user?.name}
+                  {c.user?.name}
                 </p>
 
-                {isClosed && (
+                {c.status === "CLOSED" && (
                   <p className="absolute right-4 bottom-4 text-sm font-semibold text-gray-600">
                     Завершений
                   </p>

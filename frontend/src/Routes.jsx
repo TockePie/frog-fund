@@ -5,6 +5,7 @@ import CreateBank from "./pages/Campaign/NewCampaign";
 import OpenCampaign from "./pages/Campaign/OpenCampaign";
 import WinnerPage from "./pages/Campaign/Winner";
 import CampaignsPage from "./pages/Campaigns";
+import NotificationsPage from "./pages/Notifications"; // ⭐ НОВЕ
 import RafflesPage from "./pages/Raffles";
 import App from "./App";
 
@@ -27,6 +28,9 @@ export default function AppRoutes() {
 
         {/* сторінка переможця */}
         <Route path="/campaigns/:id/winner" element={<WinnerPage />} />
+
+        {/* ⭐ НОВА СТОРІНКА СПОВІЩЕНЬ */}
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
 
       {background && (

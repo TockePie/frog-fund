@@ -1,3 +1,4 @@
+// src/pages/Campaign/WinnerPage.jsx
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 
@@ -14,17 +15,20 @@ export default function WinnerPage() {
     queryFn: () => getCampaignById(id),
   });
 
-  if (isLoading)
+  if (isLoading) {
     return <p className="p-10 text-center text-xl">Завантаження...</p>;
+  }
 
-  if (error)
+  if (error) {
     return (
       <p className="p-10 text-center text-xl text-red-600">
         Помилка: {error.message}
       </p>
     );
+  }
 
   const campaign = data.data;
+
   const winnerName =
     campaign.winner?.name ||
     campaign.Raffle?.[0]?.RaffleWinner?.[0]?.user?.name ||
@@ -61,7 +65,8 @@ export default function WinnerPage() {
                 className="h-full bg-[#1fd35a]"
                 style={{
                   width: `${
-                    (campaign.collected_amount / (campaign.target_amount || 1)) *
+                    (campaign.collected_amount /
+                      (campaign.target_amount || 1)) *
                     100
                   }%`,
                 }}
@@ -70,6 +75,7 @@ export default function WinnerPage() {
 
             <div className="mt-3 flex justify-between text-lg font-semibold">
               <span>{campaign.collected_amount}₴</span>
+              <span>{campaign.target_amount || 0}₴</span>
             </div>
           </div>
         </div>
@@ -79,7 +85,7 @@ export default function WinnerPage() {
           <h2 className="text-3xl font-black mb-4">
             Збір завершено
             <br />
-            вітаємо переможців розіграшу!
+            вітаємо переможця!
           </h2>
 
           <div className="text-4xl mb-4">👑</div>
@@ -92,7 +98,7 @@ export default function WinnerPage() {
 
           <p className="mt-6 text-sm text-gray-500 max-w-xs">
             Повідомлення про приз вже надіслано до особистого кабінету
-            переможця
+            переможця.
           </p>
         </div>
       </div>
