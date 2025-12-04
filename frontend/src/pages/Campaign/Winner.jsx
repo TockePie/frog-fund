@@ -1,18 +1,27 @@
 // src/pages/Campaign/WinnerPage.jsx
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { getCampaignById } from "@/lib/api/campaign";
+import { deleteCampaign,getCampaignById } from "@/lib/api/campaign";
 
 import avatarImage from "/golub.webp";
 
 export default function WinnerPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["campaign", id],
     queryFn: () => getCampaignById(id),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteCampaign(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries(["campaign", id]);
+      navigate("/campaigns");
+    },
   });
 
   if (isLoading) {
@@ -33,6 +42,8 @@ export default function WinnerPage() {
     campaign.winner?.name ||
     campaign.Raffle?.[0]?.RaffleWinner?.[0]?.user?.name ||
     "Переможець не знайдений";
+
+  const isMine = campaign.organizer_id === campaign.currentUserId;
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] p-8 flex flex-col items-center">
@@ -55,7 +66,7 @@ export default function WinnerPage() {
             {campaign.user?.name ?? "Користувач"} збирає на
           </p>
 
-          <h1 className="text-4xl font-black text-gray-900 mb-8">
+          <h1 className="text-4xl font-black text-gray-900 mb-8 break-words">
             {campaign.title}
           </h1>
 
@@ -90,7 +101,9 @@ export default function WinnerPage() {
 
           <div className="text-4xl mb-4">👑</div>
 
-          <p className="text-2xl font-semibold mb-8">{winnerName}</p>
+          <p className="text-2xl font-semibold mb-8 break-words">
+            {winnerName}
+          </p>
 
           <button className="rounded-2xl bg-[#f1f1f1] px-10 py-4 text-lg font-semibold shadow">
             Інформація
@@ -100,6 +113,16 @@ export default function WinnerPage() {
             Повідомлення про приз вже надіслано до особистого кабінету
             переможця.
           </p>
+
+          {/* Кнопка видалення — тільки для власника */}
+          {isMine && (
+            <button
+              onClick={() => deleteMutation.mutate()}
+              className="mt-8 px-6 py-3 bg-red-500 text-white rounded-full shadow"
+            >
+              Видалити збір
+            </button>
+          )}
         </div>
       </div>
     </div>

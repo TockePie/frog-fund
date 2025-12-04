@@ -21,16 +21,16 @@ export async function getAllCampaigns(_req, res) {
     }
   })
 
-  const prepared = items.map((c) => ({
-    ...c,
-    winner_id: c.winner_id
-  }))
-
-  res.status(200).json(prepared)
+  res.status(200).json(
+    items.map((c) => ({
+      ...c,
+      hasWinner: Boolean(c.winner_id)
+    }))
+  )
 }
 
 /* ============================
-   GET CAMPAIGN BY ID
+   GET ONE CAMPAIGN
 ============================ */
 export async function getCampaignById(req, res) {
   const { id } = req.params
@@ -39,7 +39,7 @@ export async function getCampaignById(req, res) {
     where: { id },
     include: {
       user: true,
-      Donation: true,
+      Donation: { include: { user: true } },
       Raffle: {
         include: {
           RaffleWinner: { include: { user: true } }
@@ -53,7 +53,8 @@ export async function getCampaignById(req, res) {
 
   res.status(200).json({
     ...item,
-    winner_id: item.winner_id,
+    hasWinner: Boolean(item.winner_id),
+    winner_id: item.winner_id ?? null,
     currentUserId: req.user.id
   })
 }
@@ -81,7 +82,7 @@ export async function createCampaign(req, res) {
 }
 
 /* ============================
-   UPDATE CAMPAIGN (проста версія)
+   UPDATE CAMPAIGN
 ============================ */
 export async function updateCampaign(req, res) {
   const { id } = req.params
@@ -109,7 +110,7 @@ export async function updateCampaign(req, res) {
 }
 
 /* ============================
-   DONATE + AUTO-CLOSE + PAYOUT
+   DONATE (NO AUTO CLOSE)
 ============================ */
 export async function donateToCampaign(req, res) {
   const { id } = req.params
@@ -119,10 +120,8 @@ export async function donateToCampaign(req, res) {
 
   const campaign = await prisma.campaign.findUnique({ where: { id } })
   if (!campaign) throw new HttpError('Campaign not found', 404)
-
-  if (campaign.status === 'CLOSED') {
+  if (campaign.status === 'CLOSED')
     throw new HttpError('Campaign already closed', 400)
-  }
 
   const donor = await prisma.user.findUnique({
     where: { id: req.user.id }
@@ -131,9 +130,8 @@ export async function donateToCampaign(req, res) {
   if (!donor) throw new HttpError('User not found', 404)
   if (donor.balance < amount) throw new HttpError('Not enough balance', 400)
 
-  const result = await prisma.$transaction(async (tx) => {
-    // 1) Створюємо донат
-    const donation = await tx.donation.create({
+  const donation = await prisma.$transaction(async (tx) => {
+    const donationRecord = await tx.donation.create({
       data: {
         amount,
         comment: comment || '',
@@ -143,108 +141,65 @@ export async function donateToCampaign(req, res) {
       }
     })
 
-    // 2) Знімаємо кошти з балансу користувача
     await tx.user.update({
       where: { id: donor.id },
       data: { balance: { decrement: amount } }
     })
 
-    // 3) Оновлюємо зібрану суму
-    const updatedCampaign = await tx.campaign.update({
+    await tx.campaign.update({
       where: { id },
       data: { collected_amount: { increment: amount } }
     })
 
-    let autoClosed = false
-
-    // 4) Автоматичне закриття, якщо зібрано target_amount
-    if (
-      updatedCampaign.target_amount &&
-      updatedCampaign.collected_amount >= updatedCampaign.target_amount &&
-      updatedCampaign.status !== 'CLOSED'
-    ) {
-      autoClosed = true
-
-      // Виплата організатору
-      if (updatedCampaign.collected_amount > 0) {
-        await tx.user.update({
-          where: { id: updatedCampaign.organizer_id },
-          data: {
-            balance: { increment: updatedCampaign.collected_amount }
-          }
-        })
-
-        await tx.notification.create({
-          data: {
-            user_id: updatedCampaign.organizer_id,
-            campaign_id: updatedCampaign.id,
-            message: `💰 Ваш збір "${updatedCampaign.title}" автоматично завершено. Кошти ${updatedCampaign.collected_amount}₴ зараховано на ваш баланс.`,
-            status: 'PENDING'
-          }
-        })
-      }
-
-      await tx.campaign.update({
-        where: { id: updatedCampaign.id },
-        data: { status: 'CLOSED' }
-      })
-    }
-
-    return { donation, autoClosed }
+    // ❗ НІЯКОГО АВТОЗАКРИТТЯ ❗
+    return donationRecord
   })
 
   res.status(201).json({
     success: true,
-    donation: result.donation,
-    autoClosed: result.autoClosed
+    donation
   })
 }
 
 /* ============================
-   CLOSE CAMPAIGN + PAYOUT (ручне)
+   CLOSE CAMPAIGN (MANUAL ONLY)
 ============================ */
 export async function closeCampaign(req, res) {
   const { id } = req.params
 
-  const existing = await prisma.campaign.findUnique({
-    where: { id }
-  })
-
+  const existing = await prisma.campaign.findUnique({ where: { id } })
   if (!existing) throw new HttpError('Campaign not found', 404)
+
   if (existing.organizer_id !== req.user.id)
     throw new HttpError('Forbidden', 403)
 
-  // Якщо вже закрито — нічого не робимо, щоб не платити вдруге
   if (existing.status === 'CLOSED') {
     return res.status(200).json(existing)
   }
 
+  const amount = existing.collected_amount || 0
+
   const updated = await prisma.$transaction(async (tx) => {
-    // Виплачуємо організатору ВСЕ, що зібрано на момент ручного закриття
-    if (existing.collected_amount > 0) {
+    if (amount > 0) {
       await tx.user.update({
         where: { id: existing.organizer_id },
-        data: {
-          balance: { increment: existing.collected_amount }
-        }
+        data: { balance: { increment: amount } }
       })
 
       await tx.notification.create({
         data: {
           user_id: existing.organizer_id,
           campaign_id: existing.id,
-          message: `💰 Кошти ${existing.collected_amount}₴ зараховано на ваш баланс за збір "${existing.title}".`,
+          message: `💰 Кошти ${amount}₴ зараховано на ваш баланс за збір "${existing.title}".`,
           status: 'PENDING'
         }
       })
     }
 
-    const updatedCampaign = await tx.campaign.update({
+    return await tx.campaign.update({
       where: { id },
       data: { status: 'CLOSED' }
     })
-
-    return updatedCampaign
   })
 
   res.status(200).json(updated)
@@ -296,22 +251,11 @@ export async function runRaffle(req, res) {
       include: { winner: true }
     })
 
-    // 🔔 Сповіщення переможцю
     await tx.notification.create({
       data: {
         user_id: winnerId,
         campaign_id: campaign.id,
-        message: `🎉 Вітаємо! Ви перемогли у розіграші в зборі "${campaign.title}".`,
-        status: 'PENDING'
-      }
-    })
-
-    // 🔔 Сповіщення організатору
-    await tx.notification.create({
-      data: {
-        user_id: campaign.organizer_id,
-        campaign_id: campaign.id,
-        message: `Ваш збір "${campaign.title}" успішно розіграно!`,
+        message: `🎉 Вітаємо! Ви перемогли у розіграші.`,
         status: 'PENDING'
       }
     })
@@ -321,7 +265,6 @@ export async function runRaffle(req, res) {
 
   res.status(200).json({
     success: true,
-    message: 'Raffle completed',
     winner: result.winner
   })
 }
@@ -347,7 +290,9 @@ export async function deleteCampaign(req, res) {
 
   await prisma.$transaction(async (tx) => {
     for (const raffle of existing.Raffle) {
-      await tx.raffleWinner.deleteMany({ where: { raffle_id: raffle.id } })
+      await tx.raffleWinner.deleteMany({
+        where: { raffle_id: raffle.id }
+      })
     }
 
     await tx.raffle.deleteMany({ where: { campaign_id: id } })

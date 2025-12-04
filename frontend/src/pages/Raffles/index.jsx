@@ -14,13 +14,14 @@ export default function RafflesPage() {
   const [authOpen, setAuthOpen] = useState(false);
   const [redirectId, setRedirectId] = useState(null);
 
-  // 🔥 Тягнемо ВСІ реальні збори з бекенду
+  const [filter, setFilter] = useState("all"); // all | active | closed
+
+  // FETCH CAMPAIGNS
   const { data, isLoading, error } = useQuery({
     queryKey: ["campaigns"],
     queryFn: getAllCampaigns,
   });
 
-  // Перевірка завантаження
   if (isLoading)
     return <p className="p-10 text-center text-xl">Завантаження...</p>;
 
@@ -33,7 +34,21 @@ export default function RafflesPage() {
 
   const campaigns = data.data;
 
-  // Клік по картці
+  // === SORT + FILTER ===
+  const filteredCampaigns = campaigns
+    .filter((c) => {
+      if (filter === "active") return c.status !== "CLOSED";
+      if (filter === "closed") return c.status === "CLOSED";
+      return true;
+    })
+    .sort((a, b) => {
+      // ACTIVE first
+      if (a.status !== "CLOSED" && b.status === "CLOSED") return -1;
+      if (a.status === "CLOSED" && b.status !== "CLOSED") return 1;
+      return 0;
+    });
+
+  // CLICK CARD HANDLER
   const handleOpen = (id) => {
     const token = Cookies.get("jwt");
 
@@ -43,29 +58,29 @@ export default function RafflesPage() {
       return;
     }
 
-    navigate(`/campaign/${id}`);
+    // FIXED NAVIGATION
+    navigate(`/campaigns/${id}`);
   };
 
-  // Автоперехід після логіну
+  // AFTER LOGIN AUTO REDIRECT
   const handleAuthChange = (isOpen) => {
     setAuthOpen(isOpen);
     const token = Cookies.get("jwt");
 
     if (!isOpen && token && redirectId) {
-      navigate(`/campaign/${redirectId}`);
+      navigate(`/campaigns/${redirectId}`);
     }
   };
 
   return (
     <>
-      {/* Логін-модалка */}
       <LoginModal open={authOpen} onOpenChange={handleAuthChange} />
 
       <div className="min-h-screen w-full bg-gradient-to-r from-[#ff7b7b] via-[#ff985f] to-[#ffd86f] py-10 px-6 flex justify-center">
 
         <div className="w-full max-w-6xl rounded-3xl bg-white shadow-xl p-10 relative">
 
-          {/* Назад */}
+          {/* BACK */}
           <button
             onClick={() => navigate(-1)}
             className="absolute top-6 left-6 flex items-center gap-2 text-xl font-bold text-gray-800
@@ -78,8 +93,36 @@ export default function RafflesPage() {
             Усі збори
           </h1>
 
+          {/* FILTER BUTTONS */}
+          <div className="flex gap-4 justify-center mb-10">
+            <button
+              onClick={() => setFilter("all")}
+              className={`px-6 py-2 rounded-full text-lg font-semibold shadow 
+                ${filter === "all" ? "bg-[#ff985f] text-white" : "bg-gray-200"}`}
+            >
+              Усі
+            </button>
+
+            <button
+              onClick={() => setFilter("active")}
+              className={`px-6 py-2 rounded-full text-lg font-semibold shadow 
+                ${filter === "active" ? "bg-[#ff985f] text-white" : "bg-gray-200"}`}
+            >
+              Активні
+            </button>
+
+            <button
+              onClick={() => setFilter("closed")}
+              className={`px-6 py-2 rounded-full text-lg font-semibold shadow 
+                ${filter === "closed" ? "bg-[#ff985f] text-white" : "bg-gray-200"}`}
+            >
+              Завершені
+            </button>
+          </div>
+
+          {/* CAMPAIGN CARDS */}
           <div className="flex flex-col gap-8">
-            {campaigns.map((c) => {
+            {filteredCampaigns.map((c) => {
               const progress =
                 ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
 
@@ -91,18 +134,16 @@ export default function RafflesPage() {
                              bg-gradient-to-r from-[#ffe6e1] to-[#fff5d7]
                              rounded-2xl p-6 shadow-lg hover:scale-[1.02] hover:shadow-xl transition"
                 >
-                  {/* Ліва частина */}
+                  {/* LEFT */}
                   <div className="flex flex-1 gap-4 items-center">
                     <img
                       src={golub}
-                      alt="avatar"
-                      className="w-20 h-20 rounded-full object-cover border-2 border-white"
+                      className="w-20 h-20 rounded-full border-2 border-white"
                     />
 
                     <div className="flex flex-col w-full">
                       <h2 className="text-2xl font-bold">{c.title}</h2>
 
-                      {/* Прогрес */}
                       <div className="w-full h-3 bg-white rounded-full mt-2 overflow-hidden">
                         <div
                           className="h-full bg-orange-400"
@@ -120,11 +161,13 @@ export default function RafflesPage() {
                     </div>
                   </div>
 
-                  {/* Права частина */}
+                  {/* RIGHT */}
                   <div className="flex flex-1 flex-col justify-center mt-6 md:mt-0 md:pl-10">
                     <p className="text-lg font-semibold">
                       Мінімальний внесок:{" "}
-                      <span className="font-bold">{c.min_amount ?? 0} ₴</span>
+                      <span className="font-bold">
+                        {c.min_amount ?? 0} ₴
+                      </span>
                     </p>
 
                     <p className="text-lg font-semibold">

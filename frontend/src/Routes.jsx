@@ -5,7 +5,7 @@ import CreateBank from "./pages/Campaign/NewCampaign";
 import OpenCampaign from "./pages/Campaign/OpenCampaign";
 import WinnerPage from "./pages/Campaign/Winner";
 import CampaignsPage from "./pages/Campaigns";
-import NotificationsPage from "./pages/Notifications"; // ⭐ НОВЕ
+import NotificationsPage from "./pages/Notifications";
 import RafflesPage from "./pages/Raffles";
 import App from "./App";
 
@@ -16,20 +16,25 @@ export default function AppRoutes() {
   return (
     <>
       <Routes location={background || location}>
+        
         <Route path="/" element={<App />} />
+
+        {/* Список зборів */}
         <Route path="/campaigns" element={<CampaignsPage />} />
 
-        <Route path="/campaign">
-          <Route path="new" element={<CreateBank />} />
-          <Route path=":id" element={<OpenCampaign />} />
-        </Route>
+        {/* Новий збір */}
+        <Route path="/campaign/new" element={<CreateBank />} />
 
+        {/* Відкритий збір */}
+        <Route path="/campaign/:id" element={<OpenCampaign />} />
+
+        {/* Переможець */}
+        <Route path="/campaign/:id/winner" element={<WinnerPage />} />
+
+        {/* Розіграші */}
         <Route path="/raffles" element={<RafflesPage />} />
 
-        {/* сторінка переможця */}
-        <Route path="/campaigns/:id/winner" element={<WinnerPage />} />
-
-        {/* ⭐ НОВА СТОРІНКА СПОВІЩЕНЬ */}
+        {/* Сповіщення */}
         <Route path="/notifications" element={<NotificationsPage />} />
       </Routes>
 
