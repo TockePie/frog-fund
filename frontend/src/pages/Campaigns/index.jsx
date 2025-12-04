@@ -159,7 +159,7 @@ export default function CampaignsPage() {
               ((c.collected_amount ?? 0) / (c.target_amount || 1)) * 100;
 
             const goToCampaign = () => {
-              if (isWinner) navigate(`/campaigns/${c.id}/winner`);
+              if (isWinner) navigate(`/campaign/${c.id}/winner`);
               else navigate(`/campaign/${c.id}`);
             };
 

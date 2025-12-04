@@ -59,7 +59,7 @@ export default function RafflesPage() {
     }
 
     // FIXED NAVIGATION
-    navigate(`/campaigns/${id}`);
+    navigate(`/campaign/${id}`);
   };
 
   // AFTER LOGIN AUTO REDIRECT
@@ -68,7 +68,7 @@ export default function RafflesPage() {
     const token = Cookies.get("jwt");
 
     if (!isOpen && token && redirectId) {
-      navigate(`/campaigns/${redirectId}`);
+      navigate(`/campaign/${redirectId}`);
     }
   };
 
