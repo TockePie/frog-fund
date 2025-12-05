@@ -1,12 +1,8 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -21,9 +17,12 @@ model User {
   password      String
   Campaign      Campaign[]
   Donation      Donation[]
+  balance       Int            @default(1000)
   Notification  Notification[]
   raffleWinners RaffleWinner[]
   raffles       Raffle[]
+
+  wonCampaigns Campaign[] @relation("WinnerRelation")
 }
 
 model Campaign {
@@ -34,9 +33,14 @@ model Campaign {
   target_amount    Int?
   collected_amount Int            @default(0)
   status           CampaignStatus @default(DRAFT)
-  user             User           @relation(fields: [organizer_id], references: [id])
-  Donation         Donation[]
-  Raffle           Raffle[]
+
+  winner_id String? @db.Uuid
+  winner    User?   @relation("WinnerRelation", fields: [winner_id], references: [id])
+
+  user         User           @relation(fields: [organizer_id], references: [id])
+  Donation     Donation[]
+  Raffle       Raffle[]
+  Notification Notification[] // ⭐ ДОДАНО – зворотній зв’язок для Notification.campaign
 }
 
 model Raffle {
@@ -73,11 +77,13 @@ model Donation {
 }
 
 model Notification {
-  id      String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  user_id String             @db.Uuid
-  message String
-  status  NotificationStatus
-  user    User               @relation(fields: [user_id], references: [id])
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String             @db.Uuid
+  campaign_id String?            @db.Uuid
+  message     String
+  status      NotificationStatus
+  user        User               @relation(fields: [user_id], references: [id])
+  campaign    Campaign?          @relation(fields: [campaign_id], references: [id])
 }
 
 enum CampaignStatus {

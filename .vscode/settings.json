@@ -12,5 +12,8 @@
       "path": "./frontend",
       "name": "frontend"
     }
-  ]
+  ],
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "always"
+  }
 }

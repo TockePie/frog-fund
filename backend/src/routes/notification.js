@@ -1,3 +1,4 @@
+// routes/notifications.js
 import express from 'express'
 
 import * as NotificationController from '../controllers/notification.js'
@@ -9,7 +10,19 @@ const router = express.Router()
 router.get(
   '/',
   authMiddleware,
-  catchAsync(NotificationController.getAllNotifications)
+  catchAsync(NotificationController.getNotifications)
+)
+
+router.put(
+  '/:id/read',
+  authMiddleware,
+  catchAsync(NotificationController.markNotificationAsRead)
+)
+
+router.put(
+  '/read-all',
+  authMiddleware,
+  catchAsync(NotificationController.markAllNotificationsAsRead)
 )
 
 export default router

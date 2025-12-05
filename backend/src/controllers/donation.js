@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+
 import {
   DonationBodyObject,
   DonationObject,
@@ -14,7 +16,7 @@ export async function getAllDonations(_req, res) {
 
 export async function getDonationById(req, res) {
   const { id } = req.params
-  const item = await DonationService.getDonations(id)
+  const item = await DonationService.getDonation(id)
   if (!item) {
     throw new HttpError('Donation not found', 404)
   }
