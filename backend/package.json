@@ -3,33 +3,47 @@
   "description": "",
   "version": "0.1.0",
   "main": "index.js",
+  "type": "module",
+
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon ./src/index.js",
     "start": "cross-env NODE_ENV=production node ./src/index.js",
+
     "lint": "eslint ./src/**/*.js --fix",
-    "format": "prettier --write ./**/*.{js,json}"
+    "format": "prettier --write ./**/*.{js,json}",
+
+    "prepare:testdb": "cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db prisma generate --schema=./prisma/schema.test.prisma && cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db prisma db push --schema=./prisma/schema.test.prisma",
+
+    "test": "npm run prepare:testdb && npm run test:run",
+
+    "test:run": "cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand"
   },
+
   "keywords": [],
   "author": "",
   "license": "ISC",
+
   "dependencies": {
     "@prisma/client": "^6.19.0",
     "bcryptjs": "^3.0.3",
     "cors": "2.8.5",
     "cross-env": "7.0.3",
-    "dotenv": "16.5.0",
     "express": "5.1.0",
     "jsonwebtoken": "^9.0.2",
+    "uuid": "^13.0.0",
     "zod": "^4.1.12"
   },
+
   "devDependencies": {
+    "dotenv": "^17.2.3",
     "eslint": "8.57.0",
     "eslint-config-prettier": "9.1.0",
     "eslint-plugin-prettier": "5.2.6",
     "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jest": "^30.2.0",
     "nodemon": "3.1.9",
     "prettier": "3.5.3",
-    "prisma": "^6.19.0"
-  },
-  "type": "module"
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4"
+  }
 }

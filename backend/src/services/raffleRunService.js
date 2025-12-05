@@ -1,5 +1,5 @@
+import prisma from '../prisma.js'
 import { HttpError } from '../utils/http-error.js'
-import prisma from '../utils/prisma.js'
 import { DonationService } from './donation.js'
 import { NotificationService } from './notification.js'
 import { RaffleService } from './raffle.js'
@@ -19,12 +19,18 @@ export class RaffleRunService {
     switch (raffle_type) {
       case 'ALL': {
         winners = this.pickAll(donations, winner_count)
+        break
       }
       case 'MULTIPLE': {
         winners = this.pickMultiple(donations, winner_count)
+        break
       }
       case 'TOP': {
         winners = this.pickTop(donations, winner_count)
+        break
+      }
+      default: {
+        throw new HttpError('Unknown raffle type', 400)
       }
     }
 
@@ -48,12 +54,12 @@ export class RaffleRunService {
     return winners.map((w) => ({ user: w.user, amount: w.amount }))
   }
 
-  pickAll(donations, count) {
+  static pickAll(donations, count) {
     const shuffled = [...donations].sort(() => Math.random() - 0.5)
     return shuffled.slice(0, count)
   }
 
-  pickMultiple(donations, count) {
+  static pickMultiple(donations, count) {
     const pool = []
 
     for (const d of donations) {
@@ -73,7 +79,7 @@ export class RaffleRunService {
     return selected
   }
 
-  pickTop(donations, count) {
-    return donations.sort((a, b) => b.amount - a.amount).slice(0, count)
+  static pickTop(donations, count) {
+    return [...donations].sort((a, b) => b.amount - a.amount).slice(0, count)
   }
 }

@@ -1,0 +1,108 @@
+generator client {
+    provider = "prisma-client-js"
+    output   = "../src/generated/test-client"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            String         @id @default(uuid())
+    name          String
+    email         String         @unique
+    password      String
+    Campaign      Campaign[]
+    Donation      Donation[]
+    balance       Int            @default(1000)
+    Notification  Notification[]
+    raffleWinners RaffleWinner[]
+    raffles       Raffle[]
+
+    wonCampaigns Campaign[] @relation("WinnerRelation")
+}
+
+model Campaign {
+    id               String         @id @default(uuid())
+    organizer_id     String
+    title            String
+    description      String
+    target_amount    Int?
+    collected_amount Int            @default(0)
+    status           CampaignStatus @default(DRAFT)
+
+    winner_id String?
+    winner    User?   @relation("WinnerRelation", fields: [winner_id], references: [id])
+
+    user         User           @relation(fields: [organizer_id], references: [id])
+    Donation     Donation[]
+    Raffle       Raffle[]
+    Notification Notification[]
+}
+
+model Raffle {
+    id           String         @id @default(uuid())
+    campaign_id  String
+    creator_id   String
+    description  String
+    raffle_date  DateTime
+    winner_count Int
+    raffle_type  RaffleType
+    status       RaffleStatus
+    campaign     Campaign       @relation(fields: [campaign_id], references: [id])
+    creator      User           @relation(fields: [creator_id], references: [id])
+    RaffleWinner RaffleWinner[]
+}
+
+model RaffleWinner {
+    id        String @id @default(uuid())
+    raffle_id String
+    raffle    Raffle @relation(fields: [raffle_id], references: [id])
+    user_id   String
+    user      User   @relation(fields: [user_id], references: [id])
+}
+
+model Donation {
+    id             String   @id @default(uuid())
+    campaign_id    String
+    donor_id       String
+    transaction_id String
+    amount         Int
+    comment        String
+    campaign       Campaign @relation(fields: [campaign_id], references: [id])
+    user           User     @relation(fields: [donor_id], references: [id])
+}
+
+model Notification {
+    id          String             @id @default(uuid())
+    user_id     String
+    campaign_id String?
+    message     String
+    status      NotificationStatus
+    user        User               @relation(fields: [user_id], references: [id])
+    campaign    Campaign?          @relation(fields: [campaign_id], references: [id])
+}
+
+enum CampaignStatus {
+    DRAFT
+    ACTIVE
+    CLOSED
+    ARCHIVE
+}
+
+enum RaffleType {
+    ALL
+    MULTIPLE
+    TOP
+}
+
+enum RaffleStatus {
+    PENDING
+    COMPLETED
+}
+
+enum NotificationStatus {
+    PENDING
+    SENT
+}

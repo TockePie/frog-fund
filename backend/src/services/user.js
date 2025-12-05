@@ -1,4 +1,4 @@
-import prisma from '../utils/prisma.js'
+import prisma from '../prisma.js'
 
 export class UserService {
   static async getUsers() {

@@ -1,0 +1,2090 @@
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\.env =====
+
+# PORT=8000
+# DATABASE_URL="postgresql://postgres:postgres@localhost:5432/frogfund"
+# JWT_SECRET="supersecret"
+
+DATABASE_URL="postgresql://postgres:error888@localhost:5432/frogfund"
+PORT=4000
+
+JWT_SECRET="testsecret"
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\.eslintrc.json =====
+
+{
+  "env": {
+    "es2021": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": ["prettier"],
+  "plugins": ["prettier", "simple-import-sort"],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-unused-vars": "error",
+    "no-undef": "error",
+    "prettier/prettier": [
+      "error",
+      {
+        "semi": false,
+        "tabWidth": 2,
+        "printWidth": 80,
+        "singleQuote": true,
+        "bracketSameLine": false,
+        "trailingComma": "none",
+        "arrowParens": "always"
+      }
+    ],
+    "simple-import-sort/imports": "error",
+    "simple-import-sort/exports": "error"
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\.example.env =====
+
+# DATABASE_URL="postgres://<user>:<password>@<ip-address>:<port>/postgres?schema=public"
+
+DATABASE_URL=
+PORT=4000
+JWT_SECRET=
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\.gitignore =====
+
+node_modules/
+build/
+coverage/
+
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+.DS_Store
+
+/src/generated/prisma
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\.prettierrc.json =====
+
+{
+  "semi": false,
+  "printWidth": 80,
+  "singleQuote": true,
+  "trailingComma": "none"
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\jest.config.js =====
+
+export default {
+  rootDir: '.',
+  testEnvironment: 'node',
+
+  setupFilesAfterEnv: [
+    '<rootDir>/tests/setup-env.js',
+    '<rootDir>/tests/setup-db.js'
+  ],
+
+  testMatch: ['<rootDir>/tests/**/*.test.js'],
+
+  clearMocks: true,
+  restoreMocks: true,
+
+  transform: {}
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\package.json =====
+
+{
+  "name": "frog-fund-api",
+  "description": "",
+  "version": "0.1.0",
+  "main": "index.js",
+  "type": "module",
+
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development nodemon ./src/index.js",
+    "start": "cross-env NODE_ENV=production node ./src/index.js",
+
+    "lint": "eslint ./src/**/*.js --fix",
+    "format": "prettier --write ./**/*.{js,json}",
+
+    "prepare:testdb": "cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db prisma generate --schema=./prisma/schema.test.prisma && cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db prisma db push --schema=./prisma/schema.test.prisma",
+
+    "test": "npm run prepare:testdb && npm run test:run",
+
+    "test:run": "cross-env NODE_ENV=test DATABASE_URL=file:./prisma/test.db NODE_OPTIONS=--experimental-vm-modules npx jest --runInBand"
+  },
+
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "2.8.5",
+    "cross-env": "7.0.3",
+    "express": "5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^13.0.0",
+    "zod": "^4.1.12"
+  },
+
+  "devDependencies": {
+    "dotenv": "^17.2.3",
+    "eslint": "8.57.0",
+    "eslint-config-prettier": "9.1.0",
+    "eslint-plugin-prettier": "5.2.6",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "jest": "^30.2.0",
+    "nodemon": "3.1.9",
+    "prettier": "3.5.3",
+    "prisma": "^6.19.0",
+    "supertest": "^7.1.4"
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\README.md =====
+
+# GEN-EXPRESS-CLI
+
+This is a CLI tool to generate express.js boilerplate code.
+
+- [GITHUB](https://github.com/RulerChen/gen-express-cli)
+- [NPM](https://www.npmjs.com/package/gen-express-cli)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\schema.prisma =====
+
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name          String
+  email         String         @unique
+  password      String
+  Campaign      Campaign[]
+  Donation      Donation[]
+  balance       Int            @default(1000)
+  Notification  Notification[]
+  raffleWinners RaffleWinner[]
+  raffles       Raffle[]
+
+  wonCampaigns Campaign[] @relation("WinnerRelation")
+}
+
+model Campaign {
+  id               String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizer_id     String         @db.Uuid
+  title            String
+  description      String
+  target_amount    Int?
+  collected_amount Int            @default(0)
+  status           CampaignStatus @default(DRAFT)
+
+  winner_id String? @db.Uuid
+  winner    User?   @relation("WinnerRelation", fields: [winner_id], references: [id])
+
+  user         User           @relation(fields: [organizer_id], references: [id])
+  Donation     Donation[]
+  Raffle       Raffle[]
+  Notification Notification[] // ⭐ ДОДАНО – зворотній зв’язок для Notification.campaign
+}
+
+model Raffle {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id  String         @db.Uuid
+  creator_id   String         @db.Uuid
+  description  String
+  raffle_date  DateTime
+  winner_count Int
+  raffle_type  RaffleType
+  status       RaffleStatus
+  campaign     Campaign       @relation(fields: [campaign_id], references: [id])
+  creator      User           @relation(fields: [creator_id], references: [id])
+  RaffleWinner RaffleWinner[]
+}
+
+model RaffleWinner {
+  id        String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  raffle_id String @db.Uuid
+  raffle    Raffle @relation(fields: [raffle_id], references: [id])
+  user_id   String @db.Uuid
+  user      User   @relation(fields: [user_id], references: [id])
+}
+
+model Donation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaign_id    String   @db.Uuid
+  donor_id       String   @db.Uuid
+  transaction_id String   @db.Uuid
+  amount         Int
+  comment        String
+  campaign       Campaign @relation(fields: [campaign_id], references: [id])
+  user           User     @relation(fields: [donor_id], references: [id])
+}
+
+model Notification {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id     String             @db.Uuid
+  campaign_id String?            @db.Uuid
+  message     String
+  status      NotificationStatus
+  user        User               @relation(fields: [user_id], references: [id])
+  campaign    Campaign?          @relation(fields: [campaign_id], references: [id])
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  CLOSED
+  ARCHIVE
+}
+
+enum RaffleType {
+  ALL
+  MULTIPLE
+  TOP
+}
+
+enum RaffleStatus {
+  PENDING
+  COMPLETED
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\schema.test.prisma =====
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../src/generated/test-client"
+}
+
+datasource db {
+    provider = "sqlite"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id            String         @id @default(uuid())
+    name          String
+    email         String         @unique
+    password      String
+    Campaign      Campaign[]
+    Donation      Donation[]
+    balance       Int            @default(1000)
+    Notification  Notification[]
+    raffleWinners RaffleWinner[]
+    raffles       Raffle[]
+
+    wonCampaigns Campaign[] @relation("WinnerRelation")
+}
+
+model Campaign {
+    id               String         @id @default(uuid())
+    organizer_id     String
+    title            String
+    description      String
+    target_amount    Int?
+    collected_amount Int            @default(0)
+    status           CampaignStatus @default(DRAFT)
+
+    winner_id String?
+    winner    User?   @relation("WinnerRelation", fields: [winner_id], references: [id])
+
+    user         User           @relation(fields: [organizer_id], references: [id])
+    Donation     Donation[]
+    Raffle       Raffle[]
+    Notification Notification[]
+}
+
+model Raffle {
+    id           String         @id @default(uuid())
+    campaign_id  String
+    creator_id   String
+    description  String
+    raffle_date  DateTime
+    winner_count Int
+    raffle_type  RaffleType
+    status       RaffleStatus
+    campaign     Campaign       @relation(fields: [campaign_id], references: [id])
+    creator      User           @relation(fields: [creator_id], references: [id])
+    RaffleWinner RaffleWinner[]
+}
+
+model RaffleWinner {
+    id        String @id @default(uuid())
+    raffle_id String
+    raffle    Raffle @relation(fields: [raffle_id], references: [id])
+    user_id   String
+    user      User   @relation(fields: [user_id], references: [id])
+}
+
+model Donation {
+    id             String   @id @default(uuid())
+    campaign_id    String
+    donor_id       String
+    transaction_id String
+    amount         Int
+    comment        String
+    campaign       Campaign @relation(fields: [campaign_id], references: [id])
+    user           User     @relation(fields: [donor_id], references: [id])
+}
+
+model Notification {
+    id          String             @id @default(uuid())
+    user_id     String
+    campaign_id String?
+    message     String
+    status      NotificationStatus
+    user        User               @relation(fields: [user_id], references: [id])
+    campaign    Campaign?          @relation(fields: [campaign_id], references: [id])
+}
+
+enum CampaignStatus {
+    DRAFT
+    ACTIVE
+    CLOSED
+    ARCHIVE
+}
+
+enum RaffleType {
+    ALL
+    MULTIPLE
+    TOP
+}
+
+enum RaffleStatus {
+    PENDING
+    COMPLETED
+}
+
+enum NotificationStatus {
+    PENDING
+    SENT
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\migrations\migration_lock.toml =====
+
+# Please do not edit this file manually
+# It should be added in your version-control system (e.g., Git)
+provider = "postgresql"
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\migrations\20251202210343_add_balance\migration.sql =====
+
+-- CreateEnum
+CREATE TYPE "CampaignStatus" AS ENUM ('DRAFT', 'ACTIVE', 'CLOSED', 'ARCHIVE');
+
+-- CreateEnum
+CREATE TYPE "RaffleType" AS ENUM ('ALL', 'MULTIPLE', 'TOP');
+
+-- CreateEnum
+CREATE TYPE "RaffleStatus" AS ENUM ('PENDING', 'COMPLETED');
+
+-- CreateEnum
+CREATE TYPE "NotificationStatus" AS ENUM ('PENDING', 'SENT');
+
+-- CreateTable
+CREATE TABLE "User" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "name" TEXT NOT NULL,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "balance" INTEGER NOT NULL DEFAULT 1000,
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Campaign" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "organizer_id" UUID NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "target_amount" INTEGER,
+    "collected_amount" INTEGER NOT NULL DEFAULT 0,
+    "status" "CampaignStatus" NOT NULL DEFAULT 'DRAFT',
+
+    CONSTRAINT "Campaign_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Raffle" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "campaign_id" UUID NOT NULL,
+    "creator_id" UUID NOT NULL,
+    "description" TEXT NOT NULL,
+    "raffle_date" TIMESTAMP(3) NOT NULL,
+    "winner_count" INTEGER NOT NULL,
+    "raffle_type" "RaffleType" NOT NULL,
+    "status" "RaffleStatus" NOT NULL,
+
+    CONSTRAINT "Raffle_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "RaffleWinner" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "raffle_id" UUID NOT NULL,
+    "user_id" UUID NOT NULL,
+
+    CONSTRAINT "RaffleWinner_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Donation" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "campaign_id" UUID NOT NULL,
+    "donor_id" UUID NOT NULL,
+    "transaction_id" UUID NOT NULL,
+    "amount" INTEGER NOT NULL,
+    "comment" TEXT NOT NULL,
+
+    CONSTRAINT "Donation_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Notification" (
+    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "user_id" UUID NOT NULL,
+    "message" TEXT NOT NULL,
+    "status" "NotificationStatus" NOT NULL,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- AddForeignKey
+ALTER TABLE "Campaign" ADD CONSTRAINT "Campaign_organizer_id_fkey" FOREIGN KEY ("organizer_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Raffle" ADD CONSTRAINT "Raffle_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "Campaign"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Raffle" ADD CONSTRAINT "Raffle_creator_id_fkey" FOREIGN KEY ("creator_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RaffleWinner" ADD CONSTRAINT "RaffleWinner_raffle_id_fkey" FOREIGN KEY ("raffle_id") REFERENCES "Raffle"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "RaffleWinner" ADD CONSTRAINT "RaffleWinner_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Donation" ADD CONSTRAINT "Donation_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "Campaign"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Donation" ADD CONSTRAINT "Donation_donor_id_fkey" FOREIGN KEY ("donor_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\migrations\20251203005235_add_winner\migration.sql =====
+
+-- AlterTable
+ALTER TABLE "Campaign" ADD COLUMN     "winner_id" UUID;
+
+-- AddForeignKey
+ALTER TABLE "Campaign" ADD CONSTRAINT "Campaign_winner_id_fkey" FOREIGN KEY ("winner_id") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\prisma\migrations\20251203111707_add_notifications_relation\migration.sql =====
+
+-- AlterTable
+ALTER TABLE "Notification" ADD COLUMN     "campaign_id" UUID;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_campaign_id_fkey" FOREIGN KEY ("campaign_id") REFERENCES "Campaign"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\index.js =====
+
+import cors from 'cors'
+import dotenv from 'dotenv'
+import express from 'express'
+
+import errorHandler from './middlewares/error.js'
+import routes from './routes/index.js'
+
+dotenv.config()
+
+const app = express()
+const PORT = process.env.PORT ?? 4000
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true
+  })
+)
+
+app.use(express.urlencoded({ extended: true }))
+app.use(express.json())
+
+app.use('/', routes)
+app.use(errorHandler)
+
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`)
+  })
+}
+
+export default app
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\prisma.js =====
+
+import { PrismaClient as ProdPrismaClient } from '@prisma/client'
+
+let prisma
+
+if (process.env.NODE_ENV === 'test') {
+  console.log('🧪 Using TEST SQLite Prisma client')
+  // Помістимо динамічний імпорт — він працює в ESM
+  const mod = await import('./generated/test-client/index.js')
+  const TestPrisma = mod.PrismaClient ?? mod.PrismaClient
+  prisma = new TestPrisma()
+} else {
+  prisma = new ProdPrismaClient()
+}
+
+export default prisma
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\auth.js =====
+
+import { UserBodyObject } from '../models/user.js'
+import prisma from '../prisma.js'
+import { AuthService } from '../services/auth.js'
+
+export async function logIn(req, res) {
+  const result = await AuthService.logIn(req.body)
+  res.status(200).json(result)
+}
+
+export async function signUp(req, res) {
+  const body = UserBodyObject.parse(req.body)
+  const result = await AuthService.signUp(body)
+  res.status(201).json(result)
+}
+
+/**
+ * Повертає поточного юзера (кабінет):
+ * - береться req.user.id з JWT (middleware)
+ * - тягнемо юзера та його кампанії з БД
+ */
+export async function me(req, res) {
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    include: {
+      Campaign: true // назва зв'язку згідно schema.prisma
+    }
+  })
+
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' })
+  }
+
+  res.json({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    balance: user.balance,
+    campaigns: user.Campaign || []
+  })
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\campaign.js =====
+
+// controllers/campaign.js
+import crypto from 'crypto'
+
+import prisma from '../prisma.js'
+import { HttpError } from '../utils/http-error.js'
+
+/* ============================
+   GET ALL CAMPAIGNS
+============================ */
+export async function getAllCampaigns(_req, res) {
+  const items = await prisma.campaign.findMany({
+    include: {
+      user: true,
+      Donation: true,
+      Raffle: {
+        include: {
+          RaffleWinner: { include: { user: true } }
+        }
+      },
+      winner: true,
+      Notification: true
+    }
+  })
+
+  res.status(200).json(
+    items.map((c) => ({
+      ...c,
+      hasWinner: Boolean(c.winner_id)
+    }))
+  )
+}
+
+/* ============================
+   GET ONE CAMPAIGN
+============================ */
+export async function getCampaignById(req, res) {
+  const { id } = req.params
+
+  const item = await prisma.campaign.findUnique({
+    where: { id },
+    include: {
+      user: true,
+      Donation: { include: { user: true } },
+      Raffle: {
+        include: {
+          RaffleWinner: { include: { user: true } }
+        }
+      },
+      winner: true,
+      Notification: true
+    }
+  })
+
+  if (!item) throw new HttpError('Campaign not found', 404)
+
+  res.status(200).json({
+    ...item,
+    hasWinner: Boolean(item.winner_id),
+    winner_id: item.winner_id ?? null,
+    currentUserId: req.user?.id ?? null
+  })
+}
+
+/* ============================
+   CREATE CAMPAIGN
+============================ */
+export async function createCampaign(req, res) {
+  const { title, description, target_amount } = req.body
+
+  if (!req.user?.id) throw new HttpError('Unauthorized', 401)
+
+  const created = await prisma.campaign.create({
+    data: {
+      title,
+      description,
+      target_amount,
+      organizer_id: req.user.id,
+      collected_amount: 0,
+      status: 'ACTIVE'
+    }
+  })
+
+  res.status(201).json(created)
+}
+
+/* ============================
+   UPDATE CAMPAIGN
+============================ */
+export async function updateCampaign(req, res) {
+  const { id } = req.params
+  const { title, description, target_amount, status } = req.body
+
+  const existing = await prisma.campaign.findUnique({ where: { id } })
+  if (!existing) throw new HttpError('Campaign not found', 404)
+  if (existing.organizer_id !== req.user.id)
+    throw new HttpError('Forbidden', 403)
+
+  const updated = await prisma.campaign.update({
+    where: { id },
+    data: {
+      title: title ?? existing.title,
+      description: description ?? existing.description,
+      target_amount:
+        typeof target_amount === 'number'
+          ? target_amount
+          : existing.target_amount,
+      status: status ?? existing.status
+    }
+  })
+
+  res.status(200).json(updated)
+}
+
+/* ============================
+   DONATE (NO AUTO CLOSE)
+============================ */
+export async function donateToCampaign(req, res) {
+  const { id } = req.params
+  const { amount, comment } = req.body
+
+  if (!amount || amount <= 0) throw new HttpError('Invalid amount', 400)
+
+  const campaign = await prisma.campaign.findUnique({ where: { id } })
+  if (!campaign) throw new HttpError('Campaign not found', 404)
+  if (campaign.status === 'CLOSED')
+    throw new HttpError('Campaign already closed', 400)
+
+  const donor = await prisma.user.findUnique({
+    where: { id: req.user.id }
+  })
+
+  if (!donor) throw new HttpError('User not found', 404)
+  if (donor.balance < amount) throw new HttpError('Not enough balance', 400)
+
+  const donation = await prisma.$transaction(async (tx) => {
+    const donationRecord = await tx.donation.create({
+      data: {
+        amount,
+        comment: comment || '',
+        donor_id: donor.id,
+        campaign_id: id,
+        transaction_id: crypto.randomUUID()
+      }
+    })
+
+    await tx.user.update({
+      where: { id: donor.id },
+      data: { balance: { decrement: amount } }
+    })
+
+    await tx.campaign.update({
+      where: { id },
+      data: { collected_amount: { increment: amount } }
+    })
+
+    // ❗ НІЯКОГО АВТОЗАКРИТТЯ ❗
+    return donationRecord
+  })
+
+  res.status(201).json({
+    success: true,
+    donation
+  })
+}
+
+/* ============================
+   CLOSE CAMPAIGN (MANUAL ONLY)
+============================ */
+export async function closeCampaign(req, res) {
+  const { id } = req.params
+
+  const existing = await prisma.campaign.findUnique({ where: { id } })
+  if (!existing) throw new HttpError('Campaign not found', 404)
+
+  if (existing.organizer_id !== req.user.id)
+    throw new HttpError('Forbidden', 403)
+
+  if (existing.status === 'CLOSED') {
+    return res.status(200).json(existing)
+  }
+
+  const amount = existing.collected_amount || 0
+
+  const updated = await prisma.$transaction(async (tx) => {
+    if (amount > 0) {
+      await tx.user.update({
+        where: { id: existing.organizer_id },
+        data: { balance: { increment: amount } }
+      })
+
+      await tx.notification.create({
+        data: {
+          user_id: existing.organizer_id,
+          campaign_id: existing.id,
+          message: `💰 Кошти ${amount}₴ зараховано на ваш баланс за збір "${existing.title}".`,
+          status: 'PENDING'
+        }
+      })
+    }
+
+    return await tx.campaign.update({
+      where: { id },
+      data: { status: 'CLOSED' }
+    })
+  })
+
+  res.status(200).json(updated)
+}
+
+/* ============================
+   RUN RAFFLE
+============================ */
+export async function runRaffle(req, res) {
+  const { id } = req.params
+
+  const campaign = await prisma.campaign.findUnique({
+    where: { id },
+    include: { Donation: true, user: true }
+  })
+
+  if (!campaign) throw new HttpError('Campaign not found', 404)
+  if (campaign.organizer_id !== req.user.id)
+    throw new HttpError('Forbidden', 403)
+  if (campaign.status !== 'CLOSED')
+    throw new HttpError('Campaign must be closed before raffle', 400)
+  if (campaign.winner_id) throw new HttpError('Raffle already completed', 400)
+  if (campaign.Donation.length === 0)
+    throw new HttpError('No participants', 400)
+
+  const tickets = campaign.Donation.map((d) => d.donor_id)
+  const winnerId = tickets[Math.floor(Math.random() * tickets.length)]
+
+  const result = await prisma.$transaction(async (tx) => {
+    const raffle = await tx.raffle.create({
+      data: {
+        campaign_id: id,
+        creator_id: req.user.id,
+        description: 'Автоматичний розіграш',
+        raffle_date: new Date(),
+        winner_count: 1,
+        raffle_type: 'ALL',
+        status: 'COMPLETED'
+      }
+    })
+
+    await tx.raffleWinner.create({
+      data: { raffle_id: raffle.id, user_id: winnerId }
+    })
+
+    const updatedCampaign = await tx.campaign.update({
+      where: { id },
+      data: { winner_id: winnerId },
+      include: { winner: true }
+    })
+
+    await tx.notification.create({
+      data: {
+        user_id: winnerId,
+        campaign_id: campaign.id,
+        message: `🎉 Вітаємо! Ви перемогли у розіграші.`,
+        status: 'PENDING'
+      }
+    })
+
+    return updatedCampaign
+  })
+
+  res.status(200).json({
+    success: true,
+    winner: result.winner
+  })
+}
+
+/* ============================
+   DELETE CAMPAIGN
+============================ */
+export async function deleteCampaign(req, res) {
+  const { id } = req.params
+
+  const existing = await prisma.campaign.findUnique({
+    where: { id },
+    include: {
+      Donation: true,
+      Raffle: { include: { RaffleWinner: true } },
+      Notification: true
+    }
+  })
+
+  if (!existing) throw new HttpError('Campaign not found', 404)
+  if (existing.organizer_id !== req.user.id)
+    throw new HttpError('Forbidden', 403)
+
+  await prisma.$transaction(async (tx) => {
+    for (const raffle of existing.Raffle) {
+      await tx.raffleWinner.deleteMany({
+        where: { raffle_id: raffle.id }
+      })
+    }
+
+    await tx.raffle.deleteMany({ where: { campaign_id: id } })
+    await tx.donation.deleteMany({ where: { campaign_id: id } })
+    await tx.notification.deleteMany({ where: { campaign_id: id } })
+
+    await tx.campaign.delete({ where: { id } })
+  })
+
+  res.status(200).json({ success: true, message: 'Campaign deleted' })
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\donation.js =====
+
+import crypto from 'crypto'
+
+import {
+  DonationBodyObject,
+  DonationObject,
+  DonationsArray
+} from '../models/donation.js'
+import { DonationService } from '../services/donation.js'
+import { HttpError } from '../utils/http-error.js'
+
+export async function getAllDonations(_req, res) {
+  const items = await DonationService.getDonations()
+  const response = DonationsArray.parse(items)
+  res.status(200).json(response)
+}
+
+export async function getDonationById(req, res) {
+  const { id } = req.params
+  const item = await DonationService.getDonation(id)
+  if (!item) {
+    throw new HttpError('Donation not found', 404)
+  }
+  const response = DonationObject.parse(item)
+  res.status(200).json(response)
+}
+
+export async function createDonation(req, res) {
+  const body = DonationBodyObject.parse(req.body)
+  if (!req.user || !req.user.id) throw new HttpError('Unauthorized', 401)
+  const amount = Math.round(body.amount)
+  const data = {
+    ...body,
+    donor_id: req.user.id,
+    amount,
+    transaction_id: crypto.randomUUID()
+  }
+
+  const created = await DonationService.createDonation(data)
+  const response = DonationObject.parse(created)
+  res.status(201).json(response)
+}
+
+export async function deleteDonation(req, res) {
+  const { id } = req.params
+  const existing = await DonationService.getDonation(id)
+  if (!existing) throw new HttpError('Donation not found', 404)
+  if (!req.user || req.user.id !== existing.donor_id) {
+    throw new HttpError('Forbidden', 403)
+  }
+  await DonationService.deleteDonation(id)
+  res.status(204).send()
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\notification.js =====
+
+// controllers/notification.js
+import prisma from '../prisma.js'
+import { HttpError } from '../utils/http-error.js'
+
+/* ============================
+   GET USER NOTIFICATIONS
+============================ */
+export async function getNotifications(req, res) {
+  const items = await prisma.notification.findMany({
+    where: { user_id: req.user.id },
+    orderBy: { id: 'desc' } // без createdAt, тому сортуємо просто по id
+  })
+
+  res.status(200).json(items)
+}
+
+/* ============================
+   MARK ONE AS READ
+============================ */
+export async function markNotificationAsRead(req, res) {
+  const { id } = req.params
+
+  const notif = await prisma.notification.findUnique({
+    where: { id }
+  })
+
+  if (!notif) throw new HttpError('Notification not found', 404)
+  if (notif.user_id !== req.user.id) throw new HttpError('Forbidden', 403)
+
+  const updated = await prisma.notification.update({
+    where: { id },
+    data: { status: 'SENT' } // SENT = прочитано
+  })
+
+  res.status(200).json(updated)
+}
+
+/* ============================
+   MARK ALL AS READ
+============================ */
+export async function markAllNotificationsAsRead(req, res) {
+  await prisma.notification.updateMany({
+    where: {
+      user_id: req.user.id,
+      status: 'PENDING'
+    },
+    data: { status: 'SENT' }
+  })
+
+  res.status(200).json({ success: true })
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\raffle.js =====
+
+import {
+  RaffleBodyObject,
+  RaffleObject,
+  RafflesArray
+} from '../models/raffle.js'
+import { RaffleService } from '../services/raffle.js'
+import { RaffleRunService } from '../services/raffleRunService.js'
+import { HttpError } from '../utils/http-error.js'
+
+export async function getAllRaffles(_req, res) {
+  const items = await RaffleService.getRaffles()
+  const response = RafflesArray.parse(items)
+  res.status(200).json(response)
+}
+
+export async function getRaffleById(req, res) {
+  const { id } = req.params
+  const item = await RaffleService.getRaffle(id)
+  if (!item) {
+    throw new HttpError('Raffle not found', 404)
+  }
+  const response = RaffleObject.parse(item)
+  res.status(200).json(response)
+}
+
+export async function createRaffle(req, res) {
+  const data = RaffleBodyObject.parse(req.body)
+  if (!req.user || !req.user.id) throw new HttpError('Unauthorized', 401)
+  const payload = {
+    description: data.description,
+    raffle_date: data.raffle_date,
+    winner_count: data.winner_count,
+    raffle_type: data.raffle_type,
+    status: 'PENDING',
+    creator: {
+      connect: { id: req.user.id }
+    },
+    campaign: {
+      connect: { id: data.campaign_id }
+    }
+  }
+  const created = await RaffleService.createRaffle(payload)
+  const response = RaffleObject.parse(created)
+  res.status(201).json(response)
+}
+
+export async function deleteRaffle(req, res) {
+  const { id } = req.params
+  const existing = await RaffleService.getRaffle(id)
+  if (!existing) throw new HttpError('Raffle not found', 404)
+  if (!req.user || req.user.id !== existing.creator_id) {
+    throw new HttpError('Forbidden', 403)
+  }
+
+  await RaffleService.deleteRaffle(id)
+  res.status(204).send()
+}
+
+export async function runRaffle(req, res) {
+  const { id } = req.params
+  const existing = await RaffleService.getRaffle(id)
+  if (!existing) throw new HttpError('Raffle not found', 404)
+  if (!req.user || req.user.id !== existing.creator_id) {
+    throw new HttpError('Forbidden', 403)
+  }
+  const winners = await RaffleRunService.runRaffle(id)
+  res.status(200).json({
+    message: 'Raffle completed',
+    winners
+  })
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\controllers\user.js =====
+
+import bcrypt from 'bcryptjs'
+
+import {
+  UserBodyObject,
+  UserObject,
+  UsersArray,
+  UserUpdateObject
+} from '../models/user.js'
+import prisma from '../prisma.js'
+import { UserService } from '../services/user.js'
+import { HttpError } from '../utils/http-error.js'
+
+export async function getAllUsers(_req, res) {
+  const users = await UserService.getUsers()
+  const response = UsersArray.parse(users)
+  if (response.length === 0) throw new HttpError('Users not found', 404)
+
+  res.status(200).json(response)
+}
+
+export async function getUserById(req, res) {
+  const { id } = req.params
+  const user = await UserService.getUserById(id)
+  if (!user) throw new HttpError('User not found', 404)
+
+  const response = UserObject.parse(user)
+  res.status(200).json(response)
+}
+
+export async function createUser(req, res) {
+  const data = UserBodyObject.parse(req.body)
+  const hashed = await bcrypt.hash(data.password, 10)
+
+  const created = await UserService.createUser({
+    ...data,
+    password: hashed,
+    balance: 1000 // 💰 даємо стартові 1000 грн
+  })
+
+  const response = UserObject.parse(created)
+  res.status(201).json(response)
+}
+
+export async function updateUsersData(req, res) {
+  const { id } = req.params
+  const data = UserUpdateObject.parse(req.body)
+  if (!req.user || req.user.id !== id) throw new HttpError('Forbidden', 403)
+  const updated = await UserService.updateUserData(id, data)
+  if (!updated) throw new HttpError('User not found', 404)
+
+  const response = UserObject.parse(updated)
+  res.status(200).json(response)
+}
+
+export async function deleteUser(req, res) {
+  const { id } = req.params
+  if (!req.user || req.user.id !== id) throw new HttpError('Forbidden', 403)
+
+  await UserService.deleteUser(id)
+  res.status(204).send()
+}
+export async function getMe(req, res) {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    include: {
+      Campaign: true // ⬅ ВСІ банки цього користувача
+    }
+  })
+
+  res.status(200).json(user)
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\middlewares\auth.js =====
+
+import jwt from 'jsonwebtoken'
+
+import prisma from '../prisma.js'
+
+export async function authMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization
+    if (!authHeader) {
+      return res.status(401).json({ message: 'No token provided' })
+    }
+
+    const token = authHeader.split(' ')[1]
+    if (!token) {
+      return res.status(401).json({ message: 'Invalid token format' })
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      include: { Campaign: true }
+    })
+
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' })
+    }
+
+    req.user = user
+    next()
+  } catch (err) {
+    return res.status(401).json({ message: 'Unauthorized' })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\middlewares\error.js =====
+
+/* eslint-disable no-unused-vars */
+import { Prisma } from '@prisma/client'
+import { ZodError } from 'zod'
+
+export default function errorHandler(err, req, res, next) {
+  console.error(err)
+
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      error: 'Validation failed',
+      details: JSON.parse(err.message)
+    })
+  }
+
+  if (err instanceof Prisma.PrismaClientKnownRequestError) {
+    if (err.code === 'P2002') {
+      return res
+        .status(409)
+        .json({ error: 'Duplicate field', fields: err.meta?.target })
+    }
+    return res.status(400).json({ error: 'Database error', code: err.code })
+  }
+
+  if (err.name === 'HttpError') {
+    return res.status(err.statusCode).json({
+      error: err.message
+    })
+  }
+
+  res.status(500).json({
+    error: 'Internal Server Error'
+  })
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\models\campaign.js =====
+
+import * as z from 'zod'
+
+export const UserObject = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string()
+})
+
+export const CampaignBodyObject = z.object({
+  title: z.string().min(4),
+  description: z.string().min(10),
+  target_amount: z.number().optional()
+})
+
+export const CampaignObject = CampaignBodyObject.extend({
+  id: z.string(),
+  organizer_id: z.string(),
+  collected_amount: z.number(),
+  status: z.enum(['DRAFT', 'ACTIVE', 'CLOSED', 'ARCHIVE']),
+
+  // ⭐ ДОДАНІ ПОЛЯ:
+  user: UserObject.optional(),
+  currentUserId: z.string().optional()
+})
+
+export const CampaignUpdateObject = CampaignBodyObject.partial()
+
+export const CampaignsArray = z.array(CampaignObject)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\models\donation.js =====
+
+import * as z from 'zod'
+
+export const DonationBodyObject = z.object({
+  campaign_id: z.uuidv4(),
+  amount: z.number().min(0.01),
+  comment: z.string().optional()
+})
+
+export const DonationObject = DonationBodyObject.extend({
+  id: z.uuidv4(),
+  donor_id: z.uuidv4(),
+  transaction_id: z.uuidv4()
+})
+
+export const DonationsArray = z.array(DonationObject)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\models\raffle.js =====
+
+import * as z from 'zod'
+
+export const RaffleBodyObject = z.object({
+  campaign_id: z.uuidv4(),
+  description: z.string().min(10),
+  raffle_date: z.coerce.date(),
+  winner_count: z.number().min(1),
+  raffle_type: z.enum(['ALL', 'MULTIPLE', 'TOP'])
+})
+
+export const RaffleObject = RaffleBodyObject.extend({
+  id: z.uuidv4(),
+  creator_id: z.uuidv4(),
+  status: z.enum(['PENDING', 'COMPLETED'])
+})
+
+export const RafflesArray = z.array(RaffleObject)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\models\user.js =====
+
+import * as z from 'zod'
+
+export const UserBodyObject = z.object({
+  name: z.string().min(2),
+  email: z.email(),
+  password: z.string().min(8, 'Password must be at least 8 characters.')
+})
+
+export const UserObject = UserBodyObject.extend({
+  id: z.uuidv4()
+}).omit({
+  password: true
+})
+
+export const UserUpdateObject = UserObject.partial()
+export const UsersArray = z.array(UserObject)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\auth.js =====
+
+import express from 'express'
+
+import * as AuthController from '../controllers/auth.js'
+import { authMiddleware } from '../middlewares/auth.js'
+import { catchAsync } from '../utils/catch-async.js'
+
+const router = express.Router()
+
+router.post('/signup', catchAsync(AuthController.signUp))
+router.post('/login', catchAsync(AuthController.logIn))
+
+// 🔥 Новий маршрут: повертає «кабінет» поточного юзера
+router.get('/me', authMiddleware, catchAsync(AuthController.me))
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\campaign.js =====
+
+// routes/campaign.js
+import express from 'express'
+
+import * as CampaignController from '../controllers/campaign.js'
+import { authMiddleware } from '../middlewares/auth.js'
+import { catchAsync } from '../utils/catch-async.js'
+
+const router = express.Router()
+
+// Усі збори
+router.get('/', catchAsync(CampaignController.getAllCampaigns))
+
+// Один збір
+router.get(
+  '/:id',
+  authMiddleware,
+  catchAsync(CampaignController.getCampaignById)
+)
+
+// Створити збір
+router.post('/', authMiddleware, catchAsync(CampaignController.createCampaign))
+
+// Оновити збір
+router.put(
+  '/:id',
+  authMiddleware,
+  catchAsync(CampaignController.updateCampaign)
+)
+
+// Закрити збір (ручне закриття)
+router.put(
+  '/:id/close',
+  authMiddleware,
+  catchAsync(CampaignController.closeCampaign)
+)
+
+// Видалити збір
+router.delete(
+  '/:id',
+  authMiddleware,
+  catchAsync(CampaignController.deleteCampaign)
+)
+
+// Задонатити
+router.post(
+  '/:id/donate',
+  authMiddleware,
+  catchAsync(CampaignController.donateToCampaign)
+)
+
+// Провести розіграш
+router.post(
+  '/:id/raffle',
+  authMiddleware,
+  catchAsync(CampaignController.runRaffle)
+)
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\donation.js =====
+
+import express from 'express'
+
+import * as DonationController from '../controllers/donation.js'
+import { authMiddleware } from '../middlewares/auth.js'
+import { catchAsync } from '../utils/catch-async.js'
+
+const router = express.Router()
+
+router.get('/', catchAsync(DonationController.getAllDonations))
+router.get('/:id', catchAsync(DonationController.getDonationById))
+router.post('/', authMiddleware, catchAsync(DonationController.createDonation))
+router.delete(
+  '/:id',
+  authMiddleware,
+  catchAsync(DonationController.deleteDonation)
+)
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\index.js =====
+
+import express from 'express'
+
+import AuthRoutes from './auth.js'
+import CampaignRoutes from './campaign.js'
+import DonationRoutes from './donation.js'
+import NotificationRoutes from './notification.js'
+import RaffleRoutes from './raffle.js'
+import UserRoutes from './user.js'
+
+const router = express.Router()
+
+router.use('/auth', AuthRoutes)
+router.use('/users', UserRoutes)
+router.use('/campaigns', CampaignRoutes)
+router.use('/donations', DonationRoutes)
+router.use('/raffles', RaffleRoutes)
+router.use('/notifications', NotificationRoutes)
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\notification.js =====
+
+// routes/notifications.js
+import express from 'express'
+
+import * as NotificationController from '../controllers/notification.js'
+import { authMiddleware } from '../middlewares/auth.js'
+import { catchAsync } from '../utils/catch-async.js'
+
+const router = express.Router()
+
+router.get(
+  '/',
+  authMiddleware,
+  catchAsync(NotificationController.getNotifications)
+)
+
+router.put(
+  '/:id/read',
+  authMiddleware,
+  catchAsync(NotificationController.markNotificationAsRead)
+)
+
+router.put(
+  '/read-all',
+  authMiddleware,
+  catchAsync(NotificationController.markAllNotificationsAsRead)
+)
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\raffle.js =====
+
+import express from 'express'
+
+import AuthRoutes from './auth.js'
+import CampaignRoutes from './campaign.js'
+import DonationRoutes from './donation.js'
+import NotificationRoutes from './notification.js'
+import UserRoutes from './user.js'
+
+const router = express.Router()
+
+router.use('/auth', AuthRoutes)
+router.use('/users', UserRoutes)
+router.use('/campaigns', CampaignRoutes)
+router.use('/donations', DonationRoutes)
+
+router.use('/notifications', NotificationRoutes)
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\routes\user.js =====
+
+import express from 'express'
+
+import * as UserController from '../controllers/user.js'
+import { authMiddleware } from '../middlewares/auth.js'
+import { catchAsync } from '../utils/catch-async.js'
+
+const router = express.Router()
+
+// 1) Повернути поточного юзера
+router.get('/me', authMiddleware, catchAsync(UserController.getMe))
+
+// 2) Отримання юзера по id
+router.get('/:id', catchAsync(UserController.getUserById))
+
+// 3) Всі юзери
+router.get('/', catchAsync(UserController.getAllUsers))
+
+router.post('/', catchAsync(UserController.createUser))
+router.put('/:id', authMiddleware, catchAsync(UserController.updateUsersData))
+router.delete('/:id', authMiddleware, catchAsync(UserController.deleteUser))
+
+export default router
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\auth.js =====
+
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+
+import { HttpError } from '../utils/http-error.js'
+import { UserService } from './user.js'
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key'
+
+export class AuthService {
+  static async signUp({ name, email, password }) {
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const user = await UserService.createUser({
+      name,
+      email,
+      password: hashedPassword
+    })
+
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: '7d'
+    })
+
+    return { token }
+  }
+
+  static async logIn({ email, password }) {
+    const user = await UserService.getUserByEmail(email)
+    if (!user) throw new HttpError('User not found', 404)
+
+    const valid = await bcrypt.compare(password, user.password)
+    if (!valid) throw new HttpError('Invalid password', 401)
+
+    const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, {
+      expiresIn: '7d'
+    })
+
+    return { token }
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\campaign.js =====
+
+import prisma from '../prisma.js'
+
+export class CampaignService {
+  // ============================
+  // GET ALL CAMPAIGNS
+  // ============================
+  static async getCampaigns() {
+    return await prisma.campaign.findMany({
+      include: {
+        user: true // ← додано!
+      }
+    })
+  }
+
+  // ============================
+  // GET CAMPAIGN BY ID
+  // ============================
+  static async getCampaign(id) {
+    return await prisma.campaign.findUnique({
+      where: { id },
+      include: {
+        user: true // ← додано!
+      }
+    })
+  }
+
+  // ============================
+  // CREATE CAMPAIGN
+  // ============================
+  static async createCampaign(data) {
+    return await prisma.campaign.create({
+      data,
+      include: {
+        user: true // ← повертаємо організатора одразу
+      }
+    })
+  }
+
+  // ============================
+  // UPDATE CAMPAIGN
+  // ============================
+  static async updateCampaign(id, data) {
+    return await prisma.campaign
+      .update({
+        where: { id },
+        data,
+        include: {
+          user: true // ← теж повертаємо ім’я
+        }
+      })
+      .catch(() => null)
+  }
+
+  // ============================
+  // DELETE CAMPAIGN
+  // ============================
+  static async deleteCampaign(id) {
+    return await prisma.campaign.delete({
+      where: { id }
+    })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\donation.js =====
+
+import prisma from '../prisma.js'
+
+export class DonationService {
+  static async getDonations() {
+    return await prisma.donation.findMany({ include: { user: true } })
+  }
+
+  static async getDonationsByCampaign(id) {
+    return await prisma.donation.findMany({
+      where: { id },
+      include: { user: true }
+    })
+  }
+
+  static async getDonation(id) {
+    return await prisma.donation.findUnique({
+      where: { id },
+      include: { user: true }
+    })
+  }
+
+  static async createDonation(data) {
+    return await prisma.donation.create({ data })
+  }
+
+  static async deleteDonation(id) {
+    return await prisma.donation.delete({ where: { id } })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\notification.js =====
+
+import prisma from '../prisma.js'
+
+export class NotificationService {
+  static async getNotifications() {
+    return await prisma.notification.findMany()
+  }
+
+  static async getNotificationsByUser(userId) {
+    return await prisma.notification.findMany({ where: { user_id: userId } })
+  }
+
+  static async createNotification(data) {
+    return await prisma.notification.create({ data })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\raffle.js =====
+
+import prisma from '../prisma.js'
+
+export class RaffleService {
+  static async getRaffles() {
+    return await prisma.raffle.findMany()
+  }
+
+  static async getRaffle(id) {
+    return await prisma.raffle.findUnique({ where: { id } })
+  }
+
+  static async createRaffle(data) {
+    return await prisma.raffle.create({ data })
+  }
+
+  static async updateRaffle(id, data) {
+    return await prisma.raffle.update({
+      where: { id: id },
+      data
+    })
+  }
+
+  static async deleteRaffle(id) {
+    return await prisma.raffle.delete({ where: { id } })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\raffleRunService.js =====
+
+import prisma from '../prisma.js'
+import { HttpError } from '../utils/http-error.js'
+import { DonationService } from './donation.js'
+import { NotificationService } from './notification.js'
+import { RaffleService } from './raffle.js'
+
+export class RaffleRunService {
+  static async runRaffle(raffleId) {
+    const raffle = await RaffleService.getRaffle(raffleId)
+    if (!raffle) throw new HttpError('Raffle not found', 404)
+    const { raffle_type, campaign_id, winner_count } = raffle
+
+    const donations = await DonationService.getDonationsByCampaign(campaign_id)
+    if (donations.length === 0) {
+      throw new HttpError('No donations to this campaign', 404)
+    }
+
+    let winners = []
+    switch (raffle_type) {
+      case 'ALL': {
+        winners = this.pickAll(donations, winner_count)
+        break
+      }
+      case 'MULTIPLE': {
+        winners = this.pickMultiple(donations, winner_count)
+        break
+      }
+      case 'TOP': {
+        winners = this.pickTop(donations, winner_count)
+        break
+      }
+      default: {
+        throw new HttpError('Unknown raffle type', 400)
+      }
+    }
+
+    await prisma.raffleWinner.createMany({
+      data: winners.map((w) => ({
+        raffle_id: raffleId,
+        user_id: w.user.id
+      }))
+    })
+
+    for (const win of winners) {
+      await NotificationService.createNotification({
+        user_id: win.user.id,
+        message: `Ви перемогли!`,
+        status: 'PENDING'
+      })
+    }
+
+    await RaffleService.updateRaffle(raffleId, { status: 'COMPLETED' })
+
+    return winners.map((w) => ({ user: w.user, amount: w.amount }))
+  }
+
+  static pickAll(donations, count) {
+    const shuffled = [...donations].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, count)
+  }
+
+  static pickMultiple(donations, count) {
+    const pool = []
+
+    for (const d of donations) {
+      const multiplier = Math.max(1, Math.floor(d.amount / 50))
+      for (let i = 0; i < multiplier; i++) {
+        pool.push(d)
+      }
+    }
+
+    const selected = []
+    for (let i = 0; i < count && pool.length > 0; i++) {
+      const idx = Math.floor(Math.random() * pool.length)
+      selected.push(pool[idx])
+      pool.splice(idx, 1)
+    }
+
+    return selected
+  }
+
+  static pickTop(donations, count) {
+    return [...donations].sort((a, b) => b.amount - a.amount).slice(0, count)
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\services\user.js =====
+
+import prisma from '../prisma.js'
+
+export class UserService {
+  static async getUsers() {
+    return await prisma.user.findMany()
+  }
+
+  static async getUserById(id) {
+    return await prisma.user.findUnique({ where: { id } })
+  }
+
+  static async getUserByEmail(email) {
+    return await prisma.user.findUnique({
+      where: {
+        email
+      }
+    })
+  }
+
+  static async createUser(data) {
+    return await prisma.user.create({ data })
+  }
+
+  static async updateUserData(id, data) {
+    return await prisma.user.update({
+      where: { id },
+      data
+    })
+  }
+
+  static async deleteUser(id) {
+    return await prisma.user.delete({ where: { id } })
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\utils\catch-async.js =====
+
+export const catchAsync = (fn) => (req, res, next) =>
+  Promise.resolve(fn(req, res, next)).catch(next)
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\src\utils\http-error.js =====
+
+export class HttpError extends Error {
+  constructor(message, statusCode) {
+    super(message)
+    this.statusCode = statusCode
+    this.name = 'HttpError'
+  }
+}
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\setup-db.js =====
+
+import bcrypt from 'bcryptjs'
+
+import prisma from '../src/prisma.js'
+
+const TEST_USER_ID = '00000000-0000-0000-0000-000000000001'
+const CAMPAIGN_ID = 'campaign-1'
+
+/**
+ * Виконуємо видалення всіх даних у правильному порядку (дочірні записи першими),
+ * потім створюємо мінімальні seed-дані:
+ * - тестового користувача з ID = TEST_USER_ID
+ * - кампанію з id = 'campaign-1', organizer_id = TEST_USER_ID
+ *
+ * Ми використовуємо beforeAll, щоб не чистити БД між кожним it() — тестові сценарії
+ * у деяких файлах спираються на послідовність (signup -> login).
+ */
+beforeAll(async () => {
+  // Видаляємо дочірні таблиці спочатку
+  await prisma.raffleWinner.deleteMany().catch(() => {})
+  await prisma.notification.deleteMany().catch(() => {})
+  await prisma.donation.deleteMany().catch(() => {})
+  await prisma.raffle.deleteMany().catch(() => {})
+  await prisma.campaign.deleteMany().catch(() => {})
+  await prisma.user.deleteMany().catch(() => {})
+
+  // Додаємо тестового користувача
+  const hashed = await bcrypt.hash('password', 10)
+  await prisma.user.create({
+    data: {
+      id: TEST_USER_ID,
+      name: 'Test User',
+      email: 'test@example.com',
+      password: hashed,
+      balance: 1000
+    }
+  })
+
+  // Додаємо тестову кампанію (щоб tests використовували '/campaigns/campaign-1/donate')
+  await prisma.campaign.create({
+    data: {
+      id: CAMPAIGN_ID,
+      organizer_id: TEST_USER_ID,
+      title: 'Seed Campaign',
+      description: 'Seeded campaign for tests',
+      target_amount: 1000,
+      collected_amount: 0,
+      status: 'ACTIVE'
+    }
+  })
+})
+
+afterAll(async () => {
+  await prisma.$disconnect()
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\setup-env.js =====
+
+import dotenv from 'dotenv'
+dotenv.config({ path: './.env' })
+
+process.env.JWT_SECRET = process.env.JWT_SECRET || 'testsecret'
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\integration\auth.routes.test.js =====
+
+// backend/tests/integration/auth.routes.test.js
+import request from 'supertest'
+
+import app from '../../src/index.js'
+
+describe('Auth Routes', () => {
+  const uniqueEmail = `test-${Date.now()}@example.com`
+
+  it('POST /auth/signup → 201', async () => {
+    const res = await request(app)
+      .post('/auth/signup')
+      .send({ name: 'Test', email: uniqueEmail, password: '12345678' })
+    expect(res.statusCode).toBe(201)
+    expect(res.body).toHaveProperty('token')
+  })
+
+  it('POST /auth/login → 200', async () => {
+    const res = await request(app)
+      .post('/auth/login')
+      .send({ email: uniqueEmail, password: '12345678' })
+    expect(res.statusCode).toBe(200)
+    expect(res.body).toHaveProperty('token')
+  })
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\integration\campaign.routes.test.js =====
+
+// backend/tests/integration/campaign.routes.test.js
+import request from 'supertest'
+
+import app from '../../src/index.js'
+import { createTestToken } from '../utils/jwt.js'
+
+describe('Campaign Routes', () => {
+  const token = createTestToken()
+
+  it('GET /campaigns → 200', async () => {
+    const res = await request(app).get('/campaigns')
+    expect(res.statusCode).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+  })
+
+  it('POST /campaigns → 201 (with auth)', async () => {
+    const res = await request(app)
+      .post('/campaigns')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: 'Test', description: 'Help frogs', target_amount: 500 })
+    expect(res.statusCode).toBe(201)
+  })
+
+  it('POST /campaigns/:id/donate → 201', async () => {
+    const res = await request(app)
+      .post('/campaigns/campaign-1/donate')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 100, comment: 'Frogs!' })
+    expect(res.statusCode).toBe(201)
+  })
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\integration\donation.routes.test.js =====
+
+import request from 'supertest'
+
+import app from '../../src/index.js'
+
+describe('Donation Routes', () => {
+  it('GET /donations → 200', async () => {
+    const res = await request(app).get('/donations')
+    expect(res.statusCode).toBe(200)
+  })
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\integration\notification.routes.test.js =====
+
+import request from 'supertest'
+
+import app from '../../src/index.js'
+import { createTestToken } from '../utils/jwt.js'
+
+describe('Notification Routes', () => {
+  const token = createTestToken()
+
+  it('GET /notifications → 200 (with auth)', async () => {
+    const res = await request(app)
+      .get('/notifications')
+      .set('Authorization', `Bearer ${token}`)
+    expect(res.statusCode).toBe(200)
+    expect(Array.isArray(res.body)).toBe(true)
+  })
+
+  it('PUT /notifications/read-all → 200', async () => {
+    const res = await request(app)
+      .put('/notifications/read-all')
+      .set('Authorization', `Bearer ${token}`)
+    expect(res.statusCode).toBe(200)
+    expect(res.body.success).toBe(true)
+  })
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\unit\raffleRunService.test.js =====
+
+import { RaffleRunService } from '../../src/services/raffleRunService.js'
+
+describe('RaffleRunService', () => {
+  const donations = [
+    { user: { id: '1' }, amount: 50 },
+    { user: { id: '2' }, amount: 150 },
+    { user: { id: '3' }, amount: 200 }
+  ]
+
+  it('pickAll selects random unique donors', () => {
+    const result = RaffleRunService.pickAll(donations, 2)
+    expect(result).toHaveLength(2)
+    expect(new Set(result.map((d) => d.user.id)).size).toBe(2)
+  })
+
+  it('pickMultiple uses weighted tickets', () => {
+    const pool = []
+    for (const d of donations) {
+      const mult = Math.max(1, Math.floor(d.amount / 50))
+      for (let i = 0; i < mult; i++) pool.push(d)
+    }
+    expect(pool).toHaveLength(1 + 3 + 4) // 50→1, 150→3, 200→4
+  })
+
+  it('pickTop returns top N by amount', () => {
+    const result = RaffleRunService.pickTop(donations, 2)
+    expect(result[0].amount).toBe(200)
+    expect(result[1].amount).toBe(150)
+  })
+})
+
+===== C:\VSProjects\3kurs\Frog\frog-fund\backend\tests\utils\jwt.js =====
+
+// backend/tests/utils/jwt.js
+import jwt from 'jsonwebtoken'
+
+export function createTestToken(
+  userId = '00000000-0000-0000-0000-000000000001'
+) {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET is not defined')
+  }
+  return jwt.sign(
+    { id: userId, email: 'test@example.com' },
+    process.env.JWT_SECRET,
+    { expiresIn: '1h' }
+  )
+}
